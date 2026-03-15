@@ -1347,8 +1347,15 @@ function submitRateForm() {
   const delivery = document.getElementById('rate-delivery-input')?.value.trim()||'';
   if (!shop) return showToast('请填写店铺名称 🏪');
   if (!currentStar) return showToast('请点击星星打分 ⭐');
-  if (SHOPS[shop]) { if (shopUrl) { SHOPS[shop].url=shopUrl; _fbSaveShops(); } }
-  else { SHOPS[shop]={icon:'🍽',meta:delivery?`同事推荐 · ${delivery}送达`:'同事推荐',url:shopUrl,reason:reason||'同事强烈推荐！',keywords:[],dishes:[],tags:[]}; _fbSaveShops(); }
+  if (SHOPS[shop]) {
+    if (shopUrl) { SHOPS[shop].url = shopUrl; }
+    if (dishes.length) { SHOPS[shop].dishes = dishes; }
+    if (reason) { SHOPS[shop].reason = reason; }
+    _fbSaveShops();
+  } else {
+    SHOPS[shop] = {icon:'🍽', meta:delivery?`同事推荐 · ${delivery}送达`:'同事推荐', url:shopUrl, reason:reason||'同事强烈推荐！', keywords:[], dishes, tags:[]};
+    _fbSaveShops();
+  }
   const rows = document.getElementById('rate-dish-list').querySelectorAll('.dish-add-row');
   const dishes = [];
   rows.forEach(r => { const n=r.querySelector('.dish-name-input').value.trim(); const p=r.querySelector('.price-input').value.trim(); if(n) dishes.push({e:'🍽',n,p:p||'？',desc:''}); });
