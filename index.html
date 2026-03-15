@@ -541,52 +541,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 // ══════════════════════════════════════════
 // 数据源
 // ══════════════════════════════════════════
-const SHOPS = {
-  '渔你有约·酸菜鱼': {
-    icon:'🐟', meta:'川湘 · ★4.8 · 30min · 人均¥45', url:'',
-    reason:'加班首选！汤底酸辣鲜美，鱼肉嫩滑不腥，冬天喝一口暖到心里，附赠米饭管够。',
-    keywords:['鱼','酸菜','酸辣','川菜','辣','麻辣','川湘'],
-    tags:['😋 味道好','🍱 份量大'],
-    dishes:[
-      {e:'🐟',n:'招牌酸菜鱼',p:'¥38',hot:true,desc:'经典款，酸辣适中，鱼片嫩滑'},
-      {e:'🍅',n:'番茄鱼',p:'¥42',desc:'偏甜口不辣，不吃辣的同事必点'},
-      {e:'🌿',n:'藤椒鱼',p:'¥40',desc:'麻香浓郁，花椒爱好者狂喜'}
-    ]
-  },
-  '鱼鳞寿司': {
-    icon:'🍣', meta:'日料 · ★4.9 · 25min · 人均¥68', url:'',
-    reason:'加班吃日料！每日空运食材，新鲜度拉满。想换口味、吃点精致的就选这家。',
-    keywords:['寿司','日料','刺身','三文鱼','海鲜','日式'],
-    tags:['😋 味道好','💰 超值'],
-    dishes:[
-      {e:'🍣',n:'三文鱼刺身',p:'¥58',hot:true,desc:'每日新鲜直送，入口即化，值得'},
-      {e:'🥣',n:'海胆饭',p:'¥78',desc:'鲜甜浓郁，量大管饱，性价比之王'},
-      {e:'🥚',n:'玉子烧套餐',p:'¥48',desc:'附味增汤和小菜，暖胃又满足'}
-    ]
-  },
-  '蒸汽鲜生·饺子': {
-    icon:'🥟', meta:'面食 · ★4.7 · 20min · 人均¥28', url:'',
-    reason:'深夜最暖的选择！皮薄馅大，汤底鲜甜，20分钟就能送到，饿了不用等太久。',
-    keywords:['饺子','面','馄饨','水饺','蒸饺','面食','主食','暖胃'],
-    tags:['⚡ 送得快','💰 超值'],
-    dishes:[
-      {e:'🥟',n:'鲜肉大虾饺',p:'¥26',hot:true,desc:'招牌款，弹牙虾肉配鲜猪肉'},
-      {e:'🥩',n:'黑猪白菜水饺',p:'¥22',desc:'传统家常味，暖胃又治愈'},
-      {e:'🌶',n:'酸汤水饺',p:'¥24',desc:'酸辣开胃，提神醒脑赶稿必备'}
-    ]
-  },
-  '深夜炸鸡研究所': {
-    icon:'🍗', meta:'炸鸡 · ★4.6 · 15min · 人均¥35', url:'',
-    reason:'加班续命神器！15分钟闪电送达，脆皮炸鸡配薯条，吃完立刻满血复活。',
-    keywords:['炸鸡','鸡','鸡排','汉堡','快餐','薯条','脆皮','鸡腿'],
-    tags:['⚡ 送得快','🔁 会回购'],
-    dishes:[
-      {e:'🍗',n:'无骨鸡排饭',p:'¥28',hot:true,desc:'脆皮多汁，饭量够大，吃完不饿'},
-      {e:'🍖',n:'脆皮炸鸡腿',p:'¥22',desc:'外酥里嫩，越嚼越香'},
-      {e:'🍟',n:'薯条大桶',p:'¥12',desc:'超大分量，刷题追稿的好伴侣'}
-    ]
-  }
-};
+const SHOPS = {};
 
 const recData = [];
 const rankData = [];
@@ -643,19 +598,15 @@ function _initFirebase() {
     renderTodayShops();
   });
 
-  // 监听 shops — Firebase 有数据就完整恢复，没有就保持默认
+  // 监听 shops — 完全由 Firebase 控制，不保留任何默认店铺
   window._fbOnValue('shops', snap => {
     const val = snap.val();
+    // 清空所有当前店铺
+    Object.keys(SHOPS).forEach(k => delete SHOPS[k]);
+    // 从 Firebase 完整恢复
     if (val && typeof val === 'object') {
-      const defaultKeys = new Set(['渔你有约·酸菜鱼','鱼鳞寿司','蒸汽鲜生·饺子','深夜炸鸡研究所']);
-      // 删除当前所有非默认店铺（用户自添加的）
-      Object.keys(SHOPS).forEach(k => { if (!defaultKeys.has(k)) delete SHOPS[k]; });
-      // 用 Firebase 数据覆盖全部（包括默认店铺的所有字段）
       Object.entries(val).forEach(([k, v]) => { if (v && k) SHOPS[k] = v; });
-      // 删除用户已删掉的非默认店铺（Firebase 里 val 没有这个 key）
-      Object.keys(SHOPS).forEach(k => { if (!defaultKeys.has(k) && !val[k]) delete SHOPS[k]; });
     }
-    // val === null：Firebase 没数据，保持内存里的默认店铺不变
     renderTodayShops();
     if (document.getElementById('wview-shops')?.style.display !== 'none') _renderSettingsShops();
   });
