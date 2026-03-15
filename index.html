@@ -665,8 +665,6 @@ function _hideLoginScreen() {
       s.classList.add('out');
       setTimeout(() => s.style.display = 'none', 380);
     }
-    const urls = JSON.parse(localStorage.getItem('moho_shop_urls') || '{}');
-    Object.entries(urls).forEach(([k,v]) => { if (SHOPS[k]) SHOPS[k].url = v; });
   } catch(e) {}
 })();
 function doLogin() {
@@ -1047,8 +1045,6 @@ function renderRankList() {
 function toggleRankRest() { rankShowAll = !rankShowAll; renderRankList(); }
 
 // ══════════════════════════════════════════
-// 跳转淘宝闪购 — 跳转后弹出评分
-// ══════════════════════════════════════════
 // 跳转点餐 + 返回后评分
 // ══════════════════════════════════════════
 let _quickRateShop = '';
@@ -1367,6 +1363,15 @@ function submitRateForm() {
   const delivery = document.getElementById('rate-delivery-input')?.value.trim()||'';
   if (!shop) return showToast('请填写店铺名称 🏪');
   if (!currentStar) return showToast('请点击星星打分 ⭐');
+
+  // 先收集菜品和标签
+  const rows = document.getElementById('rate-dish-list').querySelectorAll('.dish-add-row');
+  const dishes = [];
+  rows.forEach(r => { const n=r.querySelector('.dish-name-input').value.trim(); const p=r.querySelector('.price-input').value.trim(); if(n) dishes.push({e:'🍽',n,p:p||'？',desc:''}); });
+  const tags = [...selectedDims];
+  const comment = document.getElementById('comment-input').value.trim();
+
+  // 再处理 SHOPS
   if (SHOPS[shop]) {
     if (shopUrl) { SHOPS[shop].url = shopUrl; }
     if (dishes.length) { SHOPS[shop].dishes = dishes; }
@@ -1377,11 +1382,7 @@ function submitRateForm() {
     SHOPS[shop] = {icon:'🍽', meta:delivery?`同事推荐 · ${delivery}送达`:'同事推荐', url:shopUrl, reason:reason||'同事强烈推荐！', keywords:[], dishes, tags};
     _fbSaveShops();
   }
-  const rows = document.getElementById('rate-dish-list').querySelectorAll('.dish-add-row');
-  const dishes = [];
-  rows.forEach(r => { const n=r.querySelector('.dish-name-input').value.trim(); const p=r.querySelector('.price-input').value.trim(); if(n) dishes.push({e:'🍽',n,p:p||'？',desc:''}); });
-  const tags = [...selectedDims];
-  const comment = document.getElementById('comment-input').value.trim();
+
   // 更新榜单（加权平均）
   const existing = rankData.find(r => r.name===shop);
   if (existing) {
@@ -1540,17 +1541,20 @@ function saveAllSettings() {
     const newName=ni.value.trim(), oldName=Object.keys(SHOPS)[idx]||newName, existing=SHOPS[oldName]||{};
     const dishes=[]; card.querySelectorAll('.shop-edit-dish-row').forEach(r=>{ const n=r.querySelector('.dish-n')?.value.trim(),p=r.querySelector('.price')?.value.trim(); if(n) dishes.push({e:'🍽',n,p:p||'',desc:'',hot:dishes.length===0}); });
     const starsEl=card.querySelector('.sec-stars'), score=starsEl?parseFloat(starsEl.dataset.score||0):0;
-    const tags=[...card.querySelectorAll('.sec-tag-btn.sel')].map(t=>t.textContent);
+    const tags=[...card.querySelectorAll('.sec-tag-btn.sel')].map(t=>t.textContent.trim());
     if(newName){
       newShops[newName]={...existing,icon:existing.icon||'🍽',meta:existing.meta||'同事推荐',url:ui?.value.trim()||existing.url||'',reason:ri?.value.trim()||existing.reason||'',keywords:existing.keywords||[],dishes:dishes.length?dishes:existing.dishes||[],tags};
+      // 同步更新 recData 里的店铺名（店铺改名时）
+      if(newName !== oldName) {
+        recData.forEach(r => { if(r.shop === oldName) r.shop = newName; });
+        _fbSaveRec();
+      }
       if(score>0){ const rd=rankData.find(r=>r.name===oldName); if(rd){rd.name=newName;rd.score=score;if(tags.length) rd.meta=`${rd.count}人评分 · ${tags.join(' ')}`;}else{rankData.push({name:newName,dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品',meta:`1人评分 · ${tags.join(' ')||'同事推荐'}`,score,count:1,likes:0});} _fbSaveRank(); }
     }
   });
   Object.keys(SHOPS).forEach(k=>delete SHOPS[k]); Object.assign(SHOPS,newShops);
-  _fbSaveShops();
+  _fbSaveShops(); // Firebase shops 监听会自动触发 renderTodayShops 和 _renderSettingsShops
   try{ const urls={}; Object.entries(SHOPS).forEach(([k,v])=>{if(v.url)urls[k]=v.url;}); localStorage.setItem('moho_shop_urls',JSON.stringify(urls)); }catch(e){}
-  renderTodayShops();
-  renderRecList();
   showToast('✅ 已保存所有修改！');
 }
 function saveSettingsName() { showToast('请点击顶部昵称来修改 😊'); }
