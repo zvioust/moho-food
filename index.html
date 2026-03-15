@@ -2,10 +2,23 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MOHO深夜食堂 🍱</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+const app = initializeApp({ databaseURL: 'https://moho-food-default-rtdb.asia-southeast1.firebasedatabase.app' });
+const db = getDatabase(app);
+window._fbDB = db;
+window._fbRef = (path) => ref(db, path);
+window._fbSet = (path, val) => set(ref(db, path), val);
+window._fbOnValue = (path, cb) => onValue(ref(db, path), cb);
+// 用 setTimeout 确保普通 script 已完成注册再触发
+setTimeout(() => document.dispatchEvent(new Event('firebaseReady')), 0);
+</script>
 <style>
 :root {
   --bg:#0a0a0a; --surface:#111111; --card:#1a1a1a; --border:#2a2a2a;
@@ -13,7 +26,7 @@
   --text:#f5f5f5; --muted:#888888; --glow:rgba(255,107,53,0.25);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Noto Serif SC',serif;min-height:100vh;overflow-x:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Serif SC',serif;min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%;}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background-image:
     radial-gradient(1px 1px at 15% 20%,rgba(255,255,255,.5) 0%,transparent 100%),
@@ -24,7 +37,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     radial-gradient(1px 1px at 55% 85%,rgba(255,255,255,.4) 0%,transparent 100%),
     radial-gradient(1.5px 1.5px at 93% 70%,rgba(255,255,255,.25) 0%,transparent 100%),
     radial-gradient(1px 1px at 27% 38%,rgba(255,255,255,.4) 0%,transparent 100%);}
-.container{max-width:480px;margin:0 auto;padding:0 16px 100px;position:relative;z-index:1;}
+.container{max-width:480px;margin:0 auto;padding:0 16px 110px;position:relative;z-index:1;overflow-x:hidden;}
 
 /* ── 登入 ── */
 #login-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
@@ -94,7 +107,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 /* ── 今日好店横滑 ── */
 .shop-browse-scroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:4px;}
 .shop-browse-scroll::-webkit-scrollbar{display:none;}
-.shop-browse-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 12px;min-width:140px;flex-shrink:0;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:6px;}
+.shop-browse-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 12px;min-width:130px;max-width:160px;flex-shrink:0;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:6px;}
 .shop-browse-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3);}
 .shop-browse-card.active{border-color:var(--accent);background:rgba(255,107,53,.06);}
 .sbc-top{display:flex;align-items:center;justify-content:space-between;}
@@ -275,7 +288,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .sec-tag-btn:hover{border-color:var(--accent3);color:var(--accent3);}
 .sec-tag-btn.sel{border-color:var(--accent3);background:rgba(6,214,160,.08);color:var(--accent3);}
 
-/* ── 菜单预览弹窗 ── */
+.qr-star{font-size:32px;cursor:pointer;opacity:.3;filter:grayscale(1);transition:all .15s;}
+.qr-star.lit{opacity:1;filter:none;transform:scale(1.1);}
 .menu-modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 16px 12px;border-bottom:1px solid var(--border);}
 .menu-header-left{display:flex;align-items:center;gap:10px;}
 .menu-modal-reason{font-size:12px;color:var(--muted);font-style:italic;padding:10px 16px;line-height:1.6;border-bottom:1px solid var(--border);}
@@ -289,7 +303,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .menu-dish-price{font-size:14px;color:var(--accent);font-weight:700;}
 
 /* ── 底部导航 ── */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(10,10,10,.9);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:8px 16px 16px;z-index:100;}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(10,10,10,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:8px 16px calc(16px + env(safe-area-inset-bottom));z-index:100;}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;cursor:pointer;transition:all .2s;border-radius:12px;}
 .nav-item .icon{font-size:22px;}.nav-item .label{font-size:10px;color:var(--muted);}
 .nav-item.active .label{color:var(--accent);}.nav-item.active .icon{transform:scale(1.15);}
@@ -335,7 +349,25 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </div>
 </div>
 
-<!-- 菜单预览弹窗 -->
+<!-- 快速评分弹窗（点餐后触发） -->
+<div class="overlay" id="quick-rate-overlay" onclick="closeQuickRate(event)">
+  <div class="modal" style="text-align:center;padding:28px 24px 40px;">
+    <div style="font-size:32px;margin-bottom:8px" id="qr-icon">🍽</div>
+    <h3 style="margin-bottom:4px" id="qr-name"></h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:20px;">点完餐回来给这家打个分吧 ✨</p>
+    <div style="display:flex;justify-content:center;gap:10px;margin-bottom:20px;" id="qr-stars">
+      <span class="qr-star" onclick="setQuickStar(1)" data-n="1">⭐</span>
+      <span class="qr-star" onclick="setQuickStar(2)" data-n="2">⭐</span>
+      <span class="qr-star" onclick="setQuickStar(3)" data-n="3">⭐</span>
+      <span class="qr-star" onclick="setQuickStar(4)" data-n="4">⭐</span>
+      <span class="qr-star" onclick="setQuickStar(5)" data-n="5">⭐</span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn secondary" style="flex:1" onclick="closeQuickRate()">下次再说</button>
+      <button class="btn green" style="flex:2" id="qr-submit-btn" onclick="submitQuickRate()" disabled>提交评分</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="menu-overlay" onclick="closeMenuModal(event)">
   <div class="modal" style="padding:0;overflow:hidden;max-height:85vh;display:flex;flex-direction:column;">
     <div class="menu-modal-header">
@@ -556,26 +588,84 @@ const SHOPS = {
   }
 };
 
-const recData = [
-  { shop:'渔你有约·酸菜鱼', icon:'🐟', user:'小王', stars:5, reason:'鱼肉嫩滑，汤底超鲜，加班必吃！', votes:3, tags:['😋 味道好','🍱 份量大'],
-    dishes:[{e:'🐟',n:'招牌酸菜鱼',p:'¥38',hot:true,desc:'经典款，汤底酸辣适中，鱼片嫩'},
-            {e:'🍅',n:'番茄鱼',p:'¥42',desc:'偏甜口，不辣，适合不吃辣的同事'},
-            {e:'🌿',n:'藤椒鱼',p:'¥40',desc:'麻香浓郁，爱吃花椒的必点'}]},
-  { shop:'鱼鳞寿司', icon:'🍣', user:'阿梅', stars:5, reason:'日料加班也能吃到，食材超级新鲜', votes:5, tags:['😋 味道好','💰 超值'],
-    dishes:[{e:'🍣',n:'三文鱼刺身',p:'¥58',hot:true,desc:'每日新鲜直送，入口即化'},
-            {e:'🥣',n:'海胆饭',p:'¥78',desc:'鲜甜浓郁，量大管饱'},
-            {e:'🥚',n:'玉子烧套餐',p:'¥48',desc:'搭配味增汤，性价比高'}]},
-  { shop:'蒸汽鲜生·饺子', icon:'🥟', user:'大刚', stars:4, reason:'20分钟送到，熬夜饿了吃饺子最暖', votes:2, tags:['⚡ 送得快'],
-    dishes:[{e:'🥟',n:'鲜肉大虾饺',p:'¥26',hot:true,desc:'皮薄馅大，一口一个停不下来'},
-            {e:'🥩',n:'黑猪白菜水饺',p:'¥22',desc:'传统口味，暖胃'}]},
-];
+const recData = [];
+const rankData = [];
 
-const rankData = [
-  {name:'鱼鳞寿司',       dish:'三文鱼刺身 · 海胆饭', meta:'12人评分 · 食材新鲜，性价比高', score:4.9, count:12},
-  {name:'渔你有约·酸菜鱼', dish:'招牌酸菜鱼',          meta:'8人评分 · 份量足，汤底鲜',     score:4.8, count:8},
-  {name:'深夜炸鸡研究所',  dish:'无骨鸡排饭',          meta:'15人评分 · 快，香，过瘾',      score:4.6, count:15},
-  {name:'蒸汽鲜生·饺子',  dish:'鲜肉大虾饺',          meta:'6人评分 · 皮薄馅大，暖胃',     score:4.5, count:6},
-];
+// ══════════════════════════════════════════
+// Firebase 实时同步
+// ══════════════════════════════════════════
+function _fbSaveRec() {
+  if (!window._fbSet) return;
+  if (!recData.length) { window._fbSet('recData', null); return; }
+  // 用对象存储，避免 Firebase array 读回顺序问题
+  const obj = {};
+  recData.forEach((r, i) => { obj['r' + i] = r; });
+  window._fbSet('recData', obj);
+}
+function _fbSaveRank() {
+  if (!window._fbSet) return;
+  if (!rankData.length) { window._fbSet('rankData', null); return; }
+  const obj = {};
+  rankData.forEach((r, i) => { obj['r' + i] = r; });
+  window._fbSet('rankData', obj);
+}
+function _fbSaveShops() {
+  if (!window._fbSet) return;
+  const toSave = {};
+  Object.entries(SHOPS).forEach(([k, v]) => { toSave[k] = v; });
+  window._fbSet('shops', toSave);
+}
+
+function _initFirebase() {
+  if (!window._fbOnValue) return;
+
+  // 监听 recData
+  window._fbOnValue('recData', snap => {
+    const val = snap.val();
+    recData.length = 0;
+    if (val) {
+      const arr = Array.isArray(val) ? val : Object.values(val);
+      arr.forEach(r => r && recData.push(r));
+    }
+    renderRecList();
+    renderTodayShops();
+  });
+
+  // 监听 rankData
+  window._fbOnValue('rankData', snap => {
+    const val = snap.val();
+    rankData.length = 0;
+    if (val) {
+      const arr = Array.isArray(val) ? val : Object.values(val);
+      arr.forEach(r => r && rankData.push(r));
+    }
+    renderRankList();
+    renderTodayShops();
+  });
+
+  // 监听 shops — Firebase 有数据就完整恢复，没有就保持默认
+  window._fbOnValue('shops', snap => {
+    const val = snap.val();
+    if (val && typeof val === 'object') {
+      const defaultKeys = new Set(['渔你有约·酸菜鱼','鱼鳞寿司','蒸汽鲜生·饺子','深夜炸鸡研究所']);
+      // 删除当前所有非默认店铺（用户自添加的）
+      Object.keys(SHOPS).forEach(k => { if (!defaultKeys.has(k)) delete SHOPS[k]; });
+      // 用 Firebase 数据覆盖全部（包括默认店铺的所有字段）
+      Object.entries(val).forEach(([k, v]) => { if (v && k) SHOPS[k] = v; });
+      // 删除用户已删掉的非默认店铺（Firebase 里 val 没有这个 key）
+      Object.keys(SHOPS).forEach(k => { if (!defaultKeys.has(k) && !val[k]) delete SHOPS[k]; });
+    }
+    // val === null：Firebase 没数据，保持内存里的默认店铺不变
+    renderTodayShops();
+    if (document.getElementById('wview-shops')?.style.display !== 'none') _renderSettingsShops();
+  });
+}
+
+// 监听 Firebase 就绪事件（由 module script 触发）
+document.addEventListener('firebaseReady', () => {
+  _initFirebase();
+  _watchTodayVotes();
+});
 
 // ══════════════════════════════════════════
 // 登入
@@ -697,7 +787,8 @@ function expandShopCard(name) {
   document.querySelectorAll('.shop-browse-card').forEach(c =>
     c.classList.toggle('active', c.querySelector('.sbc-name')?.textContent === name));
   const s = SHOPS[name]; if (!s) return;
-  const dishRows = s.dishes.map(d => `
+  const safeName = name.replace(/'/g, "\\'");
+  const dishRows = (s.dishes||[]).map(d => `
     <div class="sec-dish-row">
       <div class="sec-dish-e">${d.e}</div>
       <div class="sec-dish-info">
@@ -715,12 +806,12 @@ function expandShopCard(name) {
           <div class="sec-meta">${s.meta}</div>
           ${_renderTags(s.tags)}
         </div>
-        <div class="sec-close" onclick="expandShopCard('${name}')">✕</div>
+        <div class="sec-close" onclick="expandShopCard('${safeName}')">✕</div>
       </div>
-      <div class="sec-reason">"${s.reason}"</div>
+      <div class="sec-reason">"${s.reason||''}"</div>
       <div class="sec-dish-list">${dishRows}</div>
       <div class="sec-order-all">
-        <button class="sec-order-btn" onclick="jumpTaobao('${name}','')">🛒 去店铺点餐</button>
+        <button class="sec-order-btn" onclick="jumpTaobao('${safeName}','')">🛒 去店铺点餐</button>
       </div>
     </div>`;
   panel.style.display = 'block';
@@ -731,9 +822,8 @@ function expandShopCard(name) {
 // 查找 — 修正：整体关键词匹配
 // ══════════════════════════════════════════
 function _matchShop(shopName, s, q) {
-  // 整体匹配：输入词包含在某个 target 里，或某个 target 包含在输入词里
-  const targets = [shopName, ...s.keywords, ...s.dishes.map(d => d.n)];
-  return targets.some(t => t.includes(q) || q.includes(t));
+  const targets = [shopName, ...(s.keywords||[]), ...(s.dishes||[]).map(d => d.n)];
+  return targets.some(t => t && (t.includes(q) || q.includes(t)));
 }
 
 function doSearch() {
@@ -783,32 +873,33 @@ function onRecInput(val) {
   const matched = Object.entries(SHOPS).filter(([name, s]) => _matchShop(name, s, q));
   if (!matched.length) { box.style.display = 'none'; return; }
   list.innerHTML = matched.map(([name, s]) => {
-    const dishRows = s.dishes.map(d => `
+    const safeName = name.replace(/'/g, "\\'");
+    const dishRows = (s.dishes||[]).map(d => `
       <div class="qd-dish-row">
         <div class="qd-dish-left">
-          <span class="qd-dish-e">${d.e}</span>
+          <span class="qd-dish-e">${d.e||'🍽'}</span>
           <div class="qd-dish-info">
-            <div class="qd-dish-name">${d.n}${d.hot?' <span class="qd-hot">🔥 必点</span>':''}</div>
-            <div class="qd-dish-desc">${d.desc}</div>
+            <div class="qd-dish-name">${d.n||''}${d.hot?' <span class="qd-hot">🔥 必点</span>':''}</div>
+            <div class="qd-dish-desc">${d.desc||''}</div>
           </div>
         </div>
-        <div class="qd-dish-right"><span class="qd-dish-price">${d.p}</span></div>
+        <div class="qd-dish-right"><span class="qd-dish-price">${d.p||''}</span></div>
       </div>`).join('');
     return `
       <div class="quick-dish-card">
         <div class="qdch">
-          <div class="qdsh-icon">${s.icon}</div>
+          <div class="qdsh-icon">${s.icon||'🍽'}</div>
           <div class="qdsh-info">
             <div class="qdsh-name">${name}</div>
-            <div class="qdsh-meta">${s.meta}</div>
+            <div class="qdsh-meta">${s.meta||''}</div>
           </div>
           <div class="qd-match-tag">✨ 匹配</div>
         </div>
-        <div class="qd-reason">"${s.reason}"</div>
+        <div class="qd-reason">"${s.reason||''}"</div>
         ${_renderTags(s.tags)}
         <div class="qd-dish-list">${dishRows}</div>
         <div class="qd-order-row">
-          <button class="qd-order-btn" onclick="jumpTaobao('${name}','')">🛒 去店铺点餐</button>
+          <button class="qd-order-btn" onclick="jumpTaobao('${safeName}','')">🛒 去店铺点餐</button>
         </div>
       </div>`;
   }).join('');
@@ -819,8 +910,10 @@ function onRecInput(val) {
 // 随机
 // ══════════════════════════════════════════
 function randomShop() {
-  const names = Object.keys(SHOPS);
-  const name = names[Math.floor(Math.random() * names.length)];
+  // 只从榜单里有的店铺中随机（和今日好店保持一致）
+  const ranked = rankData.map(r => r.name).filter(n => SHOPS[n]);
+  const pool = ranked.length ? ranked : Object.keys(SHOPS);
+  const name = pool[Math.floor(Math.random() * pool.length)];
   document.getElementById('today-shops-section').style.display = 'block';
   document.getElementById('quick-suggest').style.display = 'none';
   document.getElementById('rec-input').value = '';
@@ -833,33 +926,40 @@ function randomShop() {
 // 今日好店 — 综合排序，每日用日期做种子
 // ══════════════════════════════════════════
 function renderTodayShops() {
-  const today = new Date();
-  const seed = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
-  // 综合分：评分*10 + 累计点赞
-  const scored = Object.entries(SHOPS).map(([name, s], globalIdx) => {
-    const rd = rankData.find(r => r.name === name);
-    const scoreBase = rd ? rd.score * 10 : 0;
-    const votes = recData.filter(r => r.shop === name).reduce((a,b)=>a+(b.votes||0),0);
-    // 同分时用日期种子打散
-    const tieBreak = ((seed * (globalIdx + 7)) % 97) / 97;
-    return { name, s, score: scoreBase + votes + tieBreak };
-  });
-  scored.sort((a,b) => b.score - a.score);
-
   const scroll = document.getElementById('shop-browse-scroll');
   if (!scroll) return;
-  scroll.innerHTML = scored.map(({name, s}) => {
-    const rd = rankData.find(r => r.name === name);
-    const badge = rd ? `★ ${rd.score.toFixed(1)}` : '新店';
+
+  // 只展示榜单里有的店铺，按综合分排序
+  const today = new Date();
+  const seed = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
+
+  const scored = rankData.map((rd, globalIdx) => {
+    const s = SHOPS[rd.name];
+    if (!s) return null;
+    const votes = recData.filter(r => r.shop === rd.name).reduce((a,b) => a+(b.votes||0), 0);
+    const tieBreak = ((seed * (globalIdx + 7)) % 97) / 97;
+    return { name: rd.name, s, score: rd.score * 10 + votes + tieBreak, rd };
+  }).filter(Boolean);
+
+  scored.sort((a, b) => b.score - a.score);
+
+  if (!scored.length) {
+    scroll.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:12px;text-align:center">暂无推荐，快去「我要推荐」添加吧！</div>';
+    return;
+  }
+
+  scroll.innerHTML = scored.map(({name, s, rd}) => {
+    const safeName = name.replace(/'/g, "\\'");
+    const badge = `★ ${rd.score.toFixed(1)}`;
     const topDishes = (s.dishes||[]).slice(0,2).map(d=>d.n).join(' · ') || '暂无菜品';
     const category = s.meta ? s.meta.split('·')[0].trim() : '美食';
     return `
-      <div class="shop-browse-card" onclick="expandShopCard('${name}')">
+      <div class="shop-browse-card" onclick="expandShopCard('${safeName}')">
         <div class="sbc-top"><div class="sbc-icon">${s.icon||'🍽'}</div><div class="sbc-badge">${badge}</div></div>
         <div class="sbc-name">${name}</div>
         <div class="sbc-tag">${category}</div>
         <div class="sbc-dishes">${topDishes}</div>
-        <button class="sbc-btn" onclick="event.stopPropagation();jumpTaobao('${name}','')">🛒 点餐</button>
+        <button class="sbc-btn" onclick="event.stopPropagation();jumpTaobao('${safeName}','')">🛒 点餐</button>
       </div>`;
   }).join('');
 }
@@ -870,35 +970,40 @@ function renderTodayShops() {
 function renderRecList() {
   const shopMap = {};
   recData.forEach(r => {
-    if (!shopMap[r.shop]) shopMap[r.shop] = {shop:r.shop, icon:r.icon, entries:[], dishes:r.dishes||[], votes:r.votes||0};
-    shopMap[r.shop].entries.push({user:r.user, stars:r.stars, reason:r.reason, tags:r.tags||[]});
-    if (r.dishes) {
-      const ex = new Set(shopMap[r.shop].dishes.map(d=>d.n));
-      r.dishes.forEach(d => { if (!ex.has(d.n)) shopMap[r.shop].dishes.push(d); });
+    if (!r || !r.shop) return;
+    if (!shopMap[r.shop]) {
+      shopMap[r.shop] = {shop:r.shop, icon:r.icon, entries:[], dishes:[], votes:0};
     }
-    shopMap[r.shop].votes = Math.max(shopMap[r.shop].votes, r.votes||0);
+    shopMap[r.shop].entries.push({user:r.user||'匿名', stars:r.stars||0, reason:r.reason||'', tags:r.tags||[]});
+    // 菜品去重合并
+    const ex = new Set(shopMap[r.shop].dishes.map(d=>d.n));
+    (r.dishes||[]).forEach(d => { if (d && d.n && !ex.has(d.n)) { shopMap[r.shop].dishes.push(d); ex.add(d.n); } });
+    // votes 累加（不在初始化时设初始值，避免双倍）
+    shopMap[r.shop].votes += (r.votes||0);
   });
   const icons = ['🍜','🥘','🍱','🥗','🍛','🥩','🍣','🥟'];
   document.getElementById('rec-list').innerHTML = Object.values(shopMap).map(s => {
-    const dishRows = s.dishes.map((d,i) => `
+    const safeShop = s.shop.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const dishRows = (s.dishes||[]).map((d,i) => `
       <div class="rec-dish-row">
         <div class="d-icon">${d.e||icons[i%icons.length]}</div>
-        <div class="d-meta"><div class="d-name">${d.n}</div><div class="d-desc">${d.desc||''}</div></div>
+        <div class="d-meta"><div class="d-name">${d.n||''}</div><div class="d-desc">${d.desc||''}</div></div>
         ${d.hot?'<div class="d-hot">🔥 必点</div>':''}
-        <div class="d-price">${d.p}</div>
+        <div class="d-price">${d.p||''}</div>
       </div>`).join('');
     const recommenders = s.entries.map(e => `
       <div class="rec-person">
         <span class="rec-person-name">${e.user}</span>
-        <span class="rec-person-stars">${'⭐'.repeat(e.stars)}</span>
+        <span class="rec-person-stars">${'⭐'.repeat(Math.min(5, Math.round(e.stars||0)))}</span>
         <span class="rec-person-reason">${e.reason}</span>
         ${_renderTags(e.tags)}
       </div>`).join('');
-    const avg = s.entries.length ? (s.entries.reduce((a,b)=>a+b.stars,0)/s.entries.length).toFixed(1) : '';
+    const validStars = s.entries.filter(e => e.stars > 0);
+    const avg = validStars.length ? (validStars.reduce((a,b)=>a+b.stars,0)/validStars.length).toFixed(1) : '';
     const allTags = [...new Set(s.entries.flatMap(e=>e.tags||[]))];
     const avatarContent = s.entries.length > 1
       ? `<span style="font-size:13px;font-weight:700;color:#fff">${s.entries.length}人</span>`
-      : `<span style="font-size:19px">${s.icon}</span>`;
+      : `<span style="font-size:19px">${s.icon||'🍽'}</span>`;
     return `
       <div class="rec-item">
         <div class="rec-item-top" onclick="toggleRecDishes(this)">
@@ -912,7 +1017,7 @@ function renderRecList() {
             ${_renderTags(allTags)}
           </div>
           <div class="rec-right">
-            <div class="rec-vote" onclick="event.stopPropagation();vote(this)">👍 ${s.votes}</div>
+            <div class="rec-vote${votedShops.has(s.shop)?' voted':''}" onclick="event.stopPropagation();vote(this)">👍 ${s.votes}</div>
             <div class="rec-expand-btn">详情 ▾</div>
           </div>
         </div>
@@ -920,20 +1025,22 @@ function renderRecList() {
           <div class="rec-dishes-title">👥 推荐人</div>
           <div class="rec-persons-list">${recommenders}</div>
           ${dishRows?`<div class="rec-dishes-title" style="margin-top:10px">🍽 推荐菜品</div><div class="rec-dish-list">${dishRows}</div>`:''}
-          <button class="rec-order-btn" onclick="jumpTaobao('${s.shop}','')">🛒 去淘宝闪购点餐</button>
+          <button class="rec-order-btn" onclick="jumpTaobao('${safeShop}','')">🛒 去淘宝闪购点餐</button>
         </div>
       </div>`;
   }).join('');
 }
-renderRecList();
-renderTodayShops();
+// 初始显示加载中，等 Firebase 数据回来后再渲染
+(function(){
+  const scroll = document.getElementById('shop-browse-scroll');
+  if (scroll) scroll.innerHTML = '<div style="padding:20px;color:var(--muted);font-size:12px;text-align:center">加载中…</div>';
+})();
 
 // ══════════════════════════════════════════
 // 榜单
 // ══════════════════════════════════════════
 let rankShowAll = false;
 const MEDALS = ['🥇','🥈','🥉'];
-const likedRanks = new Set(); // 声明在 renderRankList 之前，避免 TDZ
 
 function renderRankList() {
   const sorted = [...rankData].sort((a,b) => b.score - a.score);
@@ -943,13 +1050,14 @@ function renderRankList() {
     const hidden = i >= 3 && !rankShowAll;
     const medal = i<3 ? MEDALS[i] : (i+1);
     const cls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    const liked = likedRanks.has(r.name);
+    const liked = votedShops.has(r.name);
+    const safeRankName = r.name.replace(/'/g, "\\'");
     return `<div class="rank-item" style="${hidden?'display:none':''}">
       <div class="rank-num ${cls}">${medal}</div>
-      <div class="rank-info"><h4>${r.name}</h4><div class="rank-dish">★ ${r.dish}</div><div class="rank-meta">${r.meta}</div></div>
+      <div class="rank-info"><h4>${r.name}</h4><div class="rank-dish">★ ${r.dish||''}</div><div class="rank-meta">${r.meta||''}</div></div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <div class="rank-score"><div class="big">${r.score.toFixed(1)}</div><div class="count">${r.count}次</div></div>
-        <button class="rank-like-btn${liked?' liked':''}" onclick="likeRankItem('${r.name}',this)">
+        <button class="rank-like-btn${liked?' liked':''}" onclick="likeRankItem('${safeRankName}',this)">
           👍 ${r.likes||0}
         </button>
       </div>
@@ -963,38 +1071,32 @@ function renderRankList() {
 }
 function toggleRankRest() { rankShowAll = !rankShowAll; renderRankList(); }
 
-function likeRankItem(name, btn) {
-  if (likedRanks.has(name)) { showToast('你已经👍过这家了'); return; }
-  likedRanks.add(name);
-  const rd = rankData.find(r => r.name === name);
-  if (rd) rd.likes = (rd.likes||0) + 1;
-  btn.classList.add('liked');
-  btn.textContent = '👍 ' + (rd?.likes||1);
-  // 已在同事推荐中（任何 user）则只更新 votes，否则新增
-  const shopEntry = recData.find(r => r.shop === name && r.user.includes('点赞'));
-  if (shopEntry) {
-    shopEntry.votes = (shopEntry.votes||0) + 1;
-  } else {
-    const s = SHOPS[name];
-    recData.push({
-      shop: name,
-      icon: s?.icon || '🍽',
-      user: currentUsername ? `${currentUsername}（点赞）` : '匿名（点赞）',
-      stars: rd ? Math.round(rd.score) : 0,
-      reason: '来自榜单点赞 👍',
-      votes: 1,
-      tags: s?.tags || [],
-      dishes: s?.dishes || []
-    });
-  }
-  renderRecList();
-  renderTodayShops();
-  showToast(`👍 已为「${name}」点赞！`);
+// ══════════════════════════════════════════
+// 跳转淘宝闪购 — 跳转后弹出评分
+// ══════════════════════════════════════════
+// 跳转点餐 + 返回后评分
+// ══════════════════════════════════════════
+let _quickRateShop = '';
+let _quickRateStar = 0;
+let _pendingRateShop = '';
+
+// 每人每家只能评一次（永久，存 localStorage，必须登录才有效）
+function _hasRated(shopName) {
+  if (!currentUsername) return false; // 未登录不限制，登录后再检查
+  try {
+    const rated = JSON.parse(localStorage.getItem('moho_rated_' + currentUsername)||'[]');
+    return rated.includes(shopName);
+  } catch(e) { return false; }
+}
+function _markRated(shopName) {
+  if (!currentUsername) return;
+  try {
+    const key = 'moho_rated_' + currentUsername;
+    const rated = JSON.parse(localStorage.getItem(key)||'[]');
+    if (!rated.includes(shopName)) { rated.push(shopName); localStorage.setItem(key, JSON.stringify(rated)); }
+  } catch(e) {}
 }
 
-// ══════════════════════════════════════════
-// 跳转淘宝闪购
-// ══════════════════════════════════════════
 function jumpTaobao(shopName, dishName) {
   const s = SHOPS[shopName];
   if (s?.url) {
@@ -1003,7 +1105,78 @@ function jumpTaobao(shopName, dishName) {
     const q = encodeURIComponent(shopName + (dishName?' '+dishName:''));
     window.open('https://market.m.taobao.com/app/dinamic-fe/sg-home/index.html?query='+q, '_blank');
   }
-  showToast('🛒 已跳转淘宝闪购，点完记得来推荐！');
+  showToast('🛒 已跳转，点完回来给个评分吧！');
+  // 记录待评分店铺，等用户返回页面时弹出
+  if (!_hasRated(shopName)) _pendingRateShop = shopName;
+}
+
+// 用户从外部 app 切回来时触发评分弹窗
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && _pendingRateShop) {
+    const shop = _pendingRateShop;
+    _pendingRateShop = '';
+    setTimeout(() => openQuickRate(shop), 800);
+  }
+});
+
+function openQuickRate(shopName) {
+  // 已评过则不再弹窗
+  if (_hasRated(shopName)) {
+    showToast(`你已经给「${shopName}」评过分了 ✅`);
+    return;
+  }
+  _quickRateShop = shopName;
+  _quickRateStar = 0;
+  const s = SHOPS[shopName];
+  document.getElementById('qr-icon').textContent = s?.icon || '🍽';
+  document.getElementById('qr-name').textContent = shopName;
+  document.querySelectorAll('.qr-star').forEach(el => el.classList.remove('lit'));
+  document.getElementById('qr-submit-btn').disabled = true;
+  document.getElementById('quick-rate-overlay').classList.add('show');
+}
+
+function closeQuickRate(e) {
+  if (!e || e.target === document.getElementById('quick-rate-overlay'))
+    document.getElementById('quick-rate-overlay').classList.remove('show');
+}
+
+function setQuickStar(n) {
+  _quickRateStar = n;
+  document.querySelectorAll('.qr-star').forEach((el, i) => el.classList.toggle('lit', i < n));
+  document.getElementById('qr-submit-btn').disabled = false;
+}
+
+function submitQuickRate() {
+  if (!_quickRateStar || !_quickRateShop) return;
+  const shop = _quickRateShop;
+  const star = _quickRateStar;
+
+  // 标记已评分，防止重复
+  _markRated(shop);
+  document.getElementById('quick-rate-overlay').classList.remove('show');
+
+  // 加权计入榜单
+  const rd = rankData.find(r => r.name === shop);
+  if (rd) {
+    rd.score = Math.round(((rd.score * rd.count + star) / (rd.count + 1)) * 10) / 10;
+    rd.count += 1;
+    rd.meta = `${rd.count}人评分 · ${rd.meta.replace(/^\d+人评分 · /,'')}`;
+  } else {
+    rankData.push({ name:shop, dish:'推荐菜品', meta:`1人评分`, score:star, count:1, likes:0 });
+  }
+  _fbSaveRank();
+
+  // 加入同事推荐
+  recData.unshift({
+    shop, icon: SHOPS[shop]?.icon||'🍽',
+    user: currentUsername||'我',
+    stars: star,
+    reason: '点餐后评分 🛒',
+    votes: 0, tags: [], dishes: SHOPS[shop]?.dishes||[]
+  });
+  _fbSaveRec();
+  // Firebase 监听会触发重渲染，不需要本地再调
+  showToast(`✅ 已给「${shop}」打 ${'⭐'.repeat(Math.min(5,star))}，已计入榜单！`);
 }
 
 function openMenuPicker(shopName, s) {
@@ -1040,19 +1213,111 @@ function toggleRecDishes(topEl) {
   const open = dishes.classList.toggle('open');
   btn.textContent = open ? '详情 ▴' : '详情 ▾';
 }
-function vote(el) {
-  if (el.classList.contains('voted')) return;
-  el.classList.add('voted');
-  const m = el.textContent.match(/\d+/);
-  const newCount = m ? parseInt(m[0])+1 : 1;
-  el.textContent = '👍 ' + newCount;
-  // 同步回 recData，防止重新渲染后归零
-  const shopName = el.closest('.rec-item')?.querySelector('.sh')?.textContent;
-  if (shopName) {
-    const entry = recData.find(r => r.shop === shopName);
-    if (entry) entry.votes = newCount;
+// ══════════════════════════════════════════
+// 统一投票系统 — 两处👍共享，每日票数计入榜单
+// ══════════════════════════════════════════
+function _getTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// 本人今日已投店铺（localStorage）
+function _loadMyVotes() {
+  try { return new Set(JSON.parse(localStorage.getItem('moho_votes_'+_getTodayKey())||'[]')); }
+  catch(e) { return new Set(); }
+}
+function _saveMyVotes(set) {
+  try { localStorage.setItem('moho_votes_'+_getTodayKey(), JSON.stringify([...set])); } catch(e) {}
+}
+const votedShops = _loadMyVotes();
+
+// Firebase 当日投票数 +1（安全的先读后写）
+function _fbAddVote(shopName) {
+  if (!window._fbSet || !window._fbOnValue) return;
+  const key = _getTodayKey();
+  const safeKey = shopName.replace(/[.#$/\[\]]/g, '_');
+  const path = 'votes/' + key + '/' + safeKey;
+  // 用 setTimeout 0 确保 unsubscribe 已赋值再执行回调
+  let unsubscribe = null;
+  let done = false;
+  unsubscribe = window._fbOnValue(path, snap => {
+    if (done) return;
+    done = true;
+    const cur = snap.val() || 0;
+    window._fbSet(path, cur + 1);
+    setTimeout(() => { if (typeof unsubscribe === 'function') unsubscribe(); }, 0);
+  });
+}
+
+// 监听当日票数，实时更新👍显示数字
+function _watchTodayVotes() {
+  if (!window._fbOnValue) return;
+  const key = _getTodayKey();
+  window._fbOnValue('votes/' + key, snap => {
+    const val = snap.val() || {};
+    let changed = false;
+    // 更新榜单 likes（今日票数）
+    rankData.forEach(rd => {
+      const safeKey = rd.name.replace(/[.#$/\[\]]/g, '_');
+      const newLikes = val[safeKey] || 0;
+      if ((rd.likes||0) !== newLikes) { rd.likes = newLikes; changed = true; }
+    });
+    // 更新同事推荐 votes（每家只更新第一条）
+    const updated = new Set();
+    recData.forEach(r => {
+      if (!r.shop || updated.has(r.shop)) return;
+      const safeKey = r.shop.replace(/[.#$/\[\]]/g, '_');
+      const v = val[safeKey] || 0;
+      if ((r.votes||0) !== v) { r.votes = v; changed = true; }
+      updated.add(r.shop);
+    });
+    if (changed) { renderRankList(); renderRecList(); }
+  });
+}
+
+// 统一投票入口
+function _doVote(shopName) {
+  if (votedShops.has(shopName)) {
+    showToast('今天已经投过了，明天再来 😊'); return;
   }
-  showToast('投票成功！');
+  votedShops.add(shopName);
+  _saveMyVotes(votedShops);
+
+  // 写入 Firebase 当日票数
+  _fbAddVote(shopName);
+
+  // 投票加权计入榜单评分（每票 = 4星）
+  const rd = rankData.find(r => r.name === shopName);
+  if (rd) {
+    rd.score = Math.round(((rd.score * rd.count + 4) / (rd.count + 1)) * 10) / 10;
+    rd.count += 1;
+    rd.meta = `${rd.count}人评分 · ${rd.meta.replace(/^\d+人评分 · /,'')}`;
+  } else {
+    // 店铺首次被投票，创建榜单条目
+    const s = SHOPS[shopName];
+    rankData.push({
+      name: shopName,
+      dish: (s?.dishes||[]).slice(0,2).map(d=>d.n).join(' · ') || '推荐菜品',
+      meta: '1人评分 · 同事投票',
+      score: 4,
+      count: 1,
+      likes: 0
+    });
+  }
+  _fbSaveRank(); // Firebase 监听会触发 renderRankList 和 renderTodayShops
+
+  showToast(`👍 已投票给「${shopName}」，计入今日榜单！`);
+}
+
+// 同事推荐的👍
+function vote(el) {
+  const shopName = el.closest('.rec-item')?.querySelector('.sh')?.textContent;
+  if (shopName) _doVote(shopName);
+}
+
+// 榜单的👍
+function likeRankItem(name, btn) {
+  _doVote(name);
 }
 
 // ══════════════════════════════════════════
@@ -1074,9 +1339,15 @@ function parsePasteInput(text) {
   const dm = text.match(/(\d+分钟)送达/); if (dm) delivery = dm[1];
   const sm = text.match(/\d+分钟送达(.+?)[：:]/); if (sm) shopName = sm[1].trim();
   else { const fb = text.match(/^([^:：\n\r]{2,30})[：:]/); if (fb) shopName = fb[1].trim(); }
-  const tm = text.match(/[?&]targetUrl=([^&\s\n\r]+)/);
-  if (tm) { try { jumpUrl = decodeURIComponent(tm[1]); } catch(e){ jumpUrl=tm[1]; } }
-  else { const hm = text.match(/https?:\/\/[^\s\n\r]+/); if (hm) jumpUrl = hm[0].replace(/[）)，。\s]+$/,''); }
+  // 优先提取 https:// 短链接（微信可直接打开）
+  const httpsMatch = text.match(/https?:\/\/[^\s\n\r）)，。]+/);
+  if (httpsMatch) {
+    jumpUrl = httpsMatch[0].replace(/[）)，。\s]+$/, '');
+  } else {
+    // 降级：从 targetUrl 参数提取
+    const tm = text.match(/[?&]targetUrl=([^&\s\n\r]+)/);
+    if (tm) { try { jumpUrl = decodeURIComponent(tm[1]); } catch(e){ jumpUrl=tm[1]; } }
+  }
   if (shopName) nameInput.value = shopName;
   if (jumpUrl) urlInput.value = jumpUrl;
   if (deliveryEl) deliveryEl.value = delivery;
@@ -1121,8 +1392,8 @@ function submitRateForm() {
   const delivery = document.getElementById('rate-delivery-input')?.value.trim()||'';
   if (!shop) return showToast('请填写店铺名称 🏪');
   if (!currentStar) return showToast('请点击星星打分 ⭐');
-  if (SHOPS[shop]) { if (shopUrl) SHOPS[shop].url=shopUrl; }
-  else { SHOPS[shop]={icon:'🍽',meta:delivery?`同事推荐 · ${delivery}送达`:'同事推荐',url:shopUrl,reason:reason||'同事强烈推荐！',keywords:[],dishes:[],tags:[]}; }
+  if (SHOPS[shop]) { if (shopUrl) { SHOPS[shop].url=shopUrl; _fbSaveShops(); } }
+  else { SHOPS[shop]={icon:'🍽',meta:delivery?`同事推荐 · ${delivery}送达`:'同事推荐',url:shopUrl,reason:reason||'同事强烈推荐！',keywords:[],dishes:[],tags:[]}; _fbSaveShops(); }
   const rows = document.getElementById('rate-dish-list').querySelectorAll('.dish-add-row');
   const dishes = [];
   rows.forEach(r => { const n=r.querySelector('.dish-name-input').value.trim(); const p=r.querySelector('.price-input').value.trim(); if(n) dishes.push({e:'🍽',n,p:p||'？',desc:''}); });
@@ -1136,12 +1407,12 @@ function submitRateForm() {
     existing.meta = `${existing.count}人评分 · ${tags.join(' ')||reason||'同事推荐'}`;
     if (dishes[0]) existing.dish = dishes.map(d=>d.n).join(' · ');
   } else {
-    rankData.push({name:shop, dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品', meta:`1人评分 · ${tags.join(' ')||reason||'同事推荐'}`, score:currentStar, count:1});
+    rankData.push({name:shop, dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品', meta:`1人评分 · ${tags.join(' ')||reason||'同事推荐'}`, score:currentStar, count:1, likes:0});
   }
-  // 同步到同事推荐
+  _fbSaveRank();
   recData.unshift({shop, icon:SHOPS[shop]?.icon||'🍽', user:currentUsername||'我', stars:currentStar, reason:reason||'推荐这家！', votes:0, tags, dishes});
-  renderRecList();
-  renderTodayShops();
+  _fbSaveRec();
+  // 不在本地调 render，等 Firebase 监听回来统一渲染，避免闪烁
   if (shopUrl) { try { const urls=JSON.parse(localStorage.getItem('moho_shop_urls')||'{}'); urls[shop]=shopUrl; localStorage.setItem('moho_shop_urls',JSON.stringify(urls)); } catch(e){} }
   showToast(`✅ 已提交「${shop}」${currentStar}星推荐！`);
   clearRateForm();
@@ -1244,24 +1515,39 @@ function addSettingsDish(idx) {
 }
 function removeSettingsDish(btn) { btn.parentElement.remove(); }
 function addNewShopInSettings() {
-  const name='新店铺'+(Object.keys(SHOPS).length+1);
-  SHOPS[name]={icon:'🍽',meta:'同事推荐',url:'',reason:'',keywords:[],dishes:[],tags:[]};
+  const name = '新店铺' + (Object.keys(SHOPS).length + 1);
+  SHOPS[name] = {icon:'🍽', meta:'同事推荐', url:'', reason:'', keywords:[], dishes:[], tags:[]};
+  _fbSaveShops();
   _renderSettingsShops();
-  setTimeout(()=>toggleShopEdit(Object.keys(SHOPS).length-1),50);
+  setTimeout(() => toggleShopEdit(Object.keys(SHOPS).length - 1), 50);
 }
 function confirmDeleteShop(idx) {
-  const name=Object.keys(SHOPS)[idx]; if(name) delete SHOPS[name];
-  _renderSettingsShops(); showToast('🗑 已删除「'+(name||'')+'」');
+  const name = Object.keys(SHOPS)[idx];
+  if (!name) return;
+  delete SHOPS[name];
+  // 同步清除榜单和推荐里的该店铺数据
+  const rdIdx = rankData.findIndex(r => r.name === name);
+  if (rdIdx !== -1) { rankData.splice(rdIdx, 1); _fbSaveRank(); }
+  const recBefore = recData.length;
+  for (let i = recData.length - 1; i >= 0; i--) { if (recData[i].shop === name) recData.splice(i, 1); }
+  if (recData.length !== recBefore) _fbSaveRec();
+  _fbSaveShops();
+  _renderSettingsShops();
+  showToast('🗑 已删除「' + name + '」');
 }
 function parseSettingsPaste(textarea,idx) {
   const text=textarea.value, card=document.getElementById('sec-card-'+idx);
   if(!card||!text.trim()) return;
   const ni=card.querySelector('[data-field="name"]'), ui=card.querySelector('[data-field="url"]');
   const sm=text.match(/\d+分钟送达(.+?)[：:]/); if(sm&&ni) ni.value=sm[1].trim();
-  const tm=text.match(/[?&]targetUrl=([^&\s\n\r]+)/);
-  if(tm&&ui){ try{ui.value=decodeURIComponent(tm[1]);}catch(e){ui.value=tm[1];} }
-  else { const hm=text.match(/https?:\/\/[^\s\n\r]+/); if(hm&&ui) ui.value=hm[0].replace(/[）)，。\s]+$/,''); }
-  if(sm||tm) showToast('✅ 已自动识别店铺信息！');
+  const httpsMatch2 = text.match(/https?:\/\/[^\s\n\r）)，。]+/);
+  const tm2 = text.match(/[?&]targetUrl=([^&\s\n\r]+)/);
+  if (httpsMatch2 && ui) {
+    ui.value = httpsMatch2[0].replace(/[）)，。\s]+$/, '');
+  } else if (tm2 && ui) {
+    try { ui.value = decodeURIComponent(tm2[1]); } catch(e) { ui.value = tm2[1]; }
+  }
+  if (sm || httpsMatch2 || tm2) showToast('✅ 已自动识别店铺信息！');
 }
 function saveAllSettings() {
   const cards=document.querySelectorAll('.shop-edit-card'), newShops={};
@@ -1274,10 +1560,11 @@ function saveAllSettings() {
     const tags=[...card.querySelectorAll('.sec-tag-btn.sel')].map(t=>t.textContent);
     if(newName){
       newShops[newName]={...existing,icon:existing.icon||'🍽',meta:existing.meta||'同事推荐',url:ui?.value.trim()||existing.url||'',reason:ri?.value.trim()||existing.reason||'',keywords:existing.keywords||[],dishes:dishes.length?dishes:existing.dishes||[],tags};
-      if(score>0){ const rd=rankData.find(r=>r.name===oldName); if(rd){rd.name=newName;rd.score=score;if(tags.length) rd.meta=`${rd.count}人评分 · ${tags.join(' ')}`;}else{rankData.push({name:newName,dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品',meta:`1人评分 · ${tags.join(' ')||'同事推荐'}`,score,count:1});} }
+      if(score>0){ const rd=rankData.find(r=>r.name===oldName); if(rd){rd.name=newName;rd.score=score;if(tags.length) rd.meta=`${rd.count}人评分 · ${tags.join(' ')}`;}else{rankData.push({name:newName,dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品',meta:`1人评分 · ${tags.join(' ')||'同事推荐'}`,score,count:1,likes:0});} _fbSaveRank(); }
     }
   });
   Object.keys(SHOPS).forEach(k=>delete SHOPS[k]); Object.assign(SHOPS,newShops);
+  _fbSaveShops();
   try{ const urls={}; Object.entries(SHOPS).forEach(([k,v])=>{if(v.url)urls[k]=v.url;}); localStorage.setItem('moho_shop_urls',JSON.stringify(urls)); }catch(e){}
   renderTodayShops();
   renderRecList();
