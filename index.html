@@ -461,6 +461,33 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
     <!-- 填写推荐 -->
     <div id="wview-form">
+      <!-- 提交成功卡片（默认隐藏） -->
+      <div id="submit-success-card" style="display:none;margin-top:16px;">
+        <div style="text-align:center;padding:32px 20px 24px;background:linear-gradient(135deg,#141414,#1c1c1c);border:1px solid var(--border);border-radius:16px;">
+          <div style="font-size:56px;margin-bottom:12px;animation:bounceIn .5s cubic-bezier(.34,1.56,.64,1)">🎉</div>
+          <div style="font-size:17px;font-weight:700;margin-bottom:6px;">推荐成功！</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">感谢你的分享，同事们会看到的 ✨</div>
+          <!-- 推荐内容预览卡 -->
+          <div id="success-preview" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:left;margin-bottom:20px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span id="success-icon" style="font-size:28px;">🍽</span>
+              <div>
+                <div id="success-shop" style="font-size:14px;font-weight:700;"></div>
+                <div id="success-stars" style="font-size:13px;margin-top:2px;"></div>
+              </div>
+            </div>
+            <div id="success-reason" style="font-size:12px;color:var(--muted);font-style:italic;margin-bottom:8px;"></div>
+            <div id="success-tags" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn secondary" style="flex:1;font-size:13px;" onclick="showRateFormAgain()">✍️ 再推荐一家</button>
+            <button class="btn green" style="flex:1;font-size:13px;" onclick="switchTab('rate')">🏆 去看榜单</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 填写表单 -->
+      <div id="rate-form-content">
       <div class="score-card" style="margin-top:12px">
         <div class="rate-step-title">🏪 店铺信息</div>
         <div class="url-input-wrap">
@@ -519,6 +546,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <button class="btn green" onclick="submitRateForm()">提交推荐 ✓</button>
         </div>
       </div>
+      </div><!-- end rate-form-content -->
     </div>
 
     <!-- 管理推荐 -->
@@ -732,6 +760,11 @@ function switchWriteTab(view) {
     document.getElementById('wview-'+v).style.display = v===view ? 'block' : 'none';
     document.getElementById('wtab-'+v).classList.toggle('active', v===view);
   });
+  if (view === 'form') {
+    // 确保显示表单而不是成功卡片
+    document.getElementById('rate-form-content').style.display = 'block';
+    document.getElementById('submit-success-card').style.display = 'none';
+  }
   if (view === 'shops') _renderSettingsShops();
 }
 function goToWriteReview() { switchTab('write'); }
@@ -1045,8 +1078,41 @@ function renderRankList() {
 function toggleRankRest() { rankShowAll = !rankShowAll; renderRankList(); }
 
 // ══════════════════════════════════════════
-// 跳转点餐 + 返回后评分
+// 自动识别店铺图标
 // ══════════════════════════════════════════
+function _autoIcon(shopName, dishes) {
+  const text = [shopName, ...(dishes||[]).map(d=>d.n||'')].join(' ');
+  const rules = [
+    ['🦀', ['螃蟹','蟹','大闸蟹','花蟹']],
+    ['🦞', ['龙虾','小龙虾','皮皮虾','基围虾','虾仁']],
+    ['🍣', ['寿司','日料','日式','海胆','玉子烧','天妇罗','刺身']],
+    ['🐟', ['鱼','酸菜鱼','鲈鱼','鲫鱼','鲑鱼','三文鱼','金枪鱼','带鱼','鱼片']],
+    ['🍲', ['火锅','涮锅','毛肚','鸳鸯锅']],
+    ['🥟', ['饺子','包子','烧卖','小笼包','汤包','锅贴','煎饺','水饺','蒸饺']],
+    ['🍜', ['拉面','面条','刀削面','炸酱面','乌冬面','米线','螺蛳粉','过桥米线','馄饨']],
+    ['🍗', ['炸鸡','鸡排','鸡翅','烤鸡','白切鸡','鸡腿','鸡米花']],
+    ['🥩', ['牛排','烤肉','羊肉','烧烤','烤串','串串','牛肉']],
+    ['🌶', ['麻辣','酸辣','川菜','湘菜','泡椒','冒菜','麻辣烫']],
+    ['🥘', ['小炒','炒菜','家常','快炒','炒饭','盖浇饭']],
+    ['🍛', ['咖喱','印度','泰式','东南亚']],
+    ['🥗', ['沙拉','轻食','素食','健康餐']],
+    ['🍕', ['披萨','pizza','意面']],
+    ['🍔', ['汉堡','快餐']],
+    ['☕', ['咖啡','奶茶','茶饮','饮品']],
+    ['🍰', ['蛋糕','甜品','烘焙','面包']],
+    ['🫕', ['煲仔饭','砂锅粥','汤','炖']],
+  ];
+  for (const [icon, keywords] of rules) {
+    if (keywords.some(k => text.includes(k))) return icon;
+  }
+  return '🍽';
+}
+
+// 从淘宝分享文本提取干净的店铺名（去掉末尾 https 等残留）
+function _extractShopName(raw) {
+  return (raw||'').trim().replace(/\s*(https?:\/\/.*)?$/, '').trim();
+}
+
 let _quickRateShop = '';
 let _quickRateStar = 0;
 let _pendingRateShop = '';
@@ -1308,7 +1374,8 @@ function parsePasteInput(text) {
   }
   let delivery='', shopName='', jumpUrl='';
   const dm = text.match(/(\d+分钟)送达/); if (dm) delivery = dm[1];
-  const sm = text.match(/\d+分钟送达(.+?)[：:]/); if (sm) shopName = sm[1].trim();
+  const sm = text.match(/\d+分钟送达(.+?)[：:]/);
+  if (sm) shopName = _extractShopName(sm[1]);
   else { const fb = text.match(/^([^:：\n\r]{2,30})[：:]/); if (fb) shopName = fb[1].trim(); }
   // 优先提取 https:// 短链接（微信可直接打开）
   const httpsMatch = text.match(/https?:\/\/[^\s\n\r）)，。]+/);
@@ -1372,14 +1439,16 @@ function submitRateForm() {
   const comment = document.getElementById('comment-input').value.trim();
 
   // 再处理 SHOPS
+  const autoIcon = _autoIcon(shop, dishes);
   if (SHOPS[shop]) {
     if (shopUrl) { SHOPS[shop].url = shopUrl; }
     if (dishes.length) { SHOPS[shop].dishes = dishes; }
     if (reason) { SHOPS[shop].reason = reason; }
     if (tags.length) { SHOPS[shop].tags = tags; }
+    if (SHOPS[shop].icon === '🍽') { SHOPS[shop].icon = autoIcon; } // 只在默认图标时更新
     _fbSaveShops();
   } else {
-    SHOPS[shop] = {icon:'🍽', meta:delivery?`同事推荐 · ${delivery}送达`:'同事推荐', url:shopUrl, reason:reason||'同事强烈推荐！', keywords:[], dishes, tags};
+    SHOPS[shop] = {icon: autoIcon, meta:delivery?`同事推荐 · ${delivery}送达`:'同事推荐', url:shopUrl, reason:reason||'同事强烈推荐！', keywords:[], dishes, tags};
     _fbSaveShops();
   }
 
@@ -1394,16 +1463,37 @@ function submitRateForm() {
     rankData.push({name:shop, dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品', meta:`1人评分 · ${tags.join(' ')||reason||'同事推荐'}`, score:currentStar, count:1, likes:0});
   }
   _fbSaveRank();
-  recData.unshift({shop, icon:SHOPS[shop]?.icon||'🍽', user:currentUsername||'我', stars:currentStar, reason:reason||'推荐这家！', votes:0, tags, dishes});
+  recData.unshift({shop, icon: autoIcon, user:currentUsername||'我', stars:currentStar, reason:reason||'推荐这家！', votes:0, tags, dishes});
   _fbSaveRec();
-  // 不在本地调 render，等 Firebase 监听回来统一渲染，避免闪烁
-  if (shopUrl) { try { const urls=JSON.parse(localStorage.getItem('moho_shop_urls')||'{}'); urls[shop]=shopUrl; localStorage.setItem('moho_shop_urls',JSON.stringify(urls)); } catch(e){} }
-  showToast(`✅ 已提交「${shop}」${currentStar}星推荐！`);
+
+  // 显示提交成功卡片（在 clearRateForm 之前记录数据）
+  const submittedShop = shop;
+  const submittedStar = currentStar;
+  const submittedReason = reason;
+  const submittedTags = [...tags];
+  const submittedIcon = SHOPS[shop]?.icon || '🍽';
+
   clearRateForm();
+
+  document.getElementById('rate-form-content').style.display = 'none';
+  document.getElementById('submit-success-card').style.display = 'block';
+  document.getElementById('success-icon').textContent = submittedIcon;
+  document.getElementById('success-shop').textContent = submittedShop;
+  document.getElementById('success-stars').textContent = '⭐'.repeat(submittedStar) + '  ' + submittedStar + '分';
+  document.getElementById('success-reason').textContent = submittedReason ? `"${submittedReason}"` : '';
+  const tagsEl = document.getElementById('success-tags');
+  tagsEl.innerHTML = submittedTags.map(t => `<span class="shop-tag-pill">${t}</span>`).join('');
 }
 function removeCustomTag(el, val) {
   selectedDims.delete(val);
   el.parentElement.remove();
+}
+
+function showRateFormAgain() {
+  document.getElementById('submit-success-card').style.display = 'none';
+  document.getElementById('rate-form-content').style.display = 'block';
+  // 滚动到顶部
+  document.getElementById('rate-form-content').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function clearRateForm() {
@@ -1500,7 +1590,7 @@ function addSettingsDish(idx) {
 function removeSettingsDish(btn) { btn.parentElement.remove(); }
 function addNewShopInSettings() {
   const name = '新店铺' + (Object.keys(SHOPS).length + 1);
-  SHOPS[name] = {icon:'🍽', meta:'同事推荐', url:'', reason:'', keywords:[], dishes:[], tags:[]};
+  SHOPS[name] = {icon: _autoIcon(name, []), meta:'同事推荐', url:'', reason:'', keywords:[], dishes:[], tags:[]};
   _fbSaveShops();
   _renderSettingsShops();
   setTimeout(() => toggleShopEdit(Object.keys(SHOPS).length - 1), 50);
@@ -1523,7 +1613,13 @@ function parseSettingsPaste(textarea,idx) {
   const text=textarea.value, card=document.getElementById('sec-card-'+idx);
   if(!card||!text.trim()) return;
   const ni=card.querySelector('[data-field="name"]'), ui=card.querySelector('[data-field="url"]');
-  const sm=text.match(/\d+分钟送达(.+?)[：:]/); if(sm&&ni) ni.value=sm[1].trim();
+  const sm=text.match(/\d+分钟送达(.+?)[：:]/);
+  if(sm&&ni) {
+    const cleanName = _extractShopName(sm[1]);
+    ni.value = cleanName;
+    const iconEl = card?.querySelector('.shop-edit-icon');
+    if (iconEl) iconEl.textContent = _autoIcon(cleanName, []);
+  }
   const httpsMatch2 = text.match(/https?:\/\/[^\s\n\r）)，。]+/);
   const tm2 = text.match(/[?&]targetUrl=([^&\s\n\r]+)/);
   if (httpsMatch2 && ui) {
