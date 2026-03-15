@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOHO深夜食堂 🍱</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0a0a; --surface:#111111; --card:#1a1a1a; --border:#2a2a2a;
+  --accent:#ff6b35; --accent2:#ffd166; --accent3:#06d6a0;
+  --text:#f5f5f5; --muted:#888888; --glow:rgba(255,107,53,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Serif SC',serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1px 1px at 15% 20%,rgba(255,255,255,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 72% 10%,rgba(255,255,255,.4) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 40% 60%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 88% 45%,rgba(255,255,255,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 5% 75%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 55% 85%,rgba(255,255,255,.4) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 93% 70%,rgba(255,255,255,.25) 0%,transparent 100%),
+    radial-gradient(1px 1px at 27% 38%,rgba(255,255,255,.4) 0%,transparent 100%);}
+.container{max-width:480px;margin:0 auto;padding:0 16px 100px;position:relative;z-index:1;}
+
+/* ── 登入 ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
+#login-screen.out{animation:fadeOut .35s ease forwards;pointer-events:none;}
+@keyframes fadeOut{to{opacity:0;transform:scale(.97);}}
+.login-logo{font-size:62px;margin-bottom:10px;animation:bounceIn .6s cubic-bezier(.34,1.56,.64,1);}
+@keyframes bounceIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+.login-title{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;letter-spacing:-.03em;margin-bottom:4px;}
+.login-title .ac{color:var(--accent);}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:32px;text-align:center;line-height:1.8;max-width:280px;}
+.login-card{width:100%;max-width:360px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px 20px;}
+.login-card label{font-size:11px;color:var(--accent2);letter-spacing:.08em;display:block;margin-bottom:8px;font-weight:600;}
+.lc-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:13px 16px;color:var(--text);font-size:16px;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:6px;}
+.lc-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,107,53,.15);}
+.lc-input::placeholder{color:var(--muted);}
+.login-err{font-size:11px;color:var(--accent);min-height:16px;margin-bottom:6px;}
+.login-hint{font-size:11px;color:var(--muted);margin-bottom:18px;}
+.login-btn{width:100%;background:linear-gradient(90deg,var(--accent),#ff8c5a);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-family:inherit;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(255,107,53,.3);}
+.login-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+
+/* ── Header ── */
+.header{text-align:center;padding:36px 0 24px;animation:fadeDown .6s ease;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+.time-badge{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-family:'Space Mono',monospace;font-size:11px;color:var(--accent2);margin-bottom:14px;}
+.dot-live{width:7px;height:7px;background:var(--accent3);border-radius:50%;animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.header h1{font-size:28px;font-weight:700;line-height:1.2;letter-spacing:-.02em;}
+.header h1 .brand{font-family:'Space Mono',monospace;color:var(--text);letter-spacing:-.04em;}
+.header h1 .hl{color:var(--accent);}
+.header p{color:var(--muted);font-size:13px;margin-top:8px;}
+.user-badge{display:inline-flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--accent3);margin-top:8px;cursor:pointer;transition:border-color .2s;}
+.user-badge:hover{border-color:var(--accent3);}
+
+/* ── Tabs ── */
+.tabs{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px;margin:20px 0;gap:4px;}
+.tab{flex:1;padding:10px 0;text-align:center;font-size:13px;border-radius:10px;cursor:pointer;transition:all .2s;color:var(--muted);}
+.tab.active{background:var(--accent);color:#fff;box-shadow:0 0 16px var(--glow);font-weight:600;}
+
+/* ── Pages ── */
+.page{display:none;animation:fadeIn .35s ease;}.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── Section title ── */
+.section-title{font-size:12px;letter-spacing:.12em;color:var(--accent2);text-transform:uppercase;margin:24px 0 12px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── Buttons ── */
+.btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-family:inherit;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn:hover{filter:brightness(1.15);transform:translateY(-1px);}.btn:active{transform:none;}
+.btn.secondary{background:var(--card);border:1px solid var(--border);color:var(--text);}
+.btn.green{background:var(--accent3);color:#0f0e17;}
+
+/* ── 求推荐输入区 ── */
+.recommend-box{background:linear-gradient(135deg,#141414,#1c1c1c);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;}
+.recommend-box h3{font-size:15px;margin-bottom:6px;}
+.recommend-box p{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px;}
+.input-row{display:flex;gap:8px;}
+.input-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;}
+.input-row input:focus{border-color:var(--accent);}
+.input-row input::placeholder{color:var(--muted);}
+.random-btn{background:linear-gradient(90deg,#7c3aed,#a855f7)!important;position:relative;overflow:hidden;}
+.random-btn:hover{filter:brightness(1.15);}
+.random-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);transform:translateX(-100%);transition:transform .4s;}
+.random-btn:hover::after{transform:translateX(100%);}
+.search-btn{background:var(--accent3)!important;color:#0a0a0a!important;}
+
+/* ── 今日好店横滑 ── */
+.shop-browse-scroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:4px;}
+.shop-browse-scroll::-webkit-scrollbar{display:none;}
+.shop-browse-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 12px;min-width:140px;flex-shrink:0;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:6px;}
+.shop-browse-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3);}
+.shop-browse-card.active{border-color:var(--accent);background:rgba(255,107,53,.06);}
+.sbc-top{display:flex;align-items:center;justify-content:space-between;}
+.sbc-icon{font-size:26px;}
+.sbc-badge{font-size:10px;color:var(--accent2);font-weight:700;font-family:'Space Mono',monospace;}
+.sbc-name{font-size:12px;font-weight:700;line-height:1.3;}
+.sbc-tag{font-size:10px;color:var(--muted);}
+.sbc-dishes{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sbc-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:6px 0;font-size:11px;font-family:inherit;font-weight:600;cursor:pointer;transition:all .2s;width:100%;margin-top:2px;}
+.sbc-btn:hover{filter:brightness(1.15);}
+
+/* ── 展开店铺详情 ── */
+.shop-expand-card{background:var(--card);border:1px solid var(--accent);border-radius:14px;overflow:hidden;margin-bottom:16px;animation:fadeIn .25s ease;}
+.sec-header{display:flex;align-items:center;gap:10px;padding:14px 14px 10px;}
+.sec-icon{font-size:28px;}
+.sec-info{flex:1;}
+.sec-name{font-size:15px;font-weight:700;}
+.sec-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.sec-close{font-size:18px;color:var(--muted);cursor:pointer;padding:4px;transition:color .2s;}
+.sec-close:hover{color:var(--accent);}
+.sec-reason{font-size:12px;color:var(--muted);font-style:italic;padding:0 14px 12px;line-height:1.6;border-bottom:1px solid var(--border);}
+.sec-dish-list{display:flex;flex-direction:column;}
+.sec-dish-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);}
+.sec-dish-row:last-child{border-bottom:none;}
+.sec-dish-e{font-size:22px;flex-shrink:0;}
+.sec-dish-info{flex:1;min-width:0;}
+.sec-dish-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;}
+.sec-dish-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+.sec-dish-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sec-dish-price{font-size:13px;color:var(--accent);font-weight:700;}
+.sec-order-all{padding:12px 14px;border-top:1px solid var(--border);}
+.sec-order-btn{width:100%;background:linear-gradient(90deg,var(--accent),#ff8c5a);color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-family:inherit;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.sec-order-btn:hover{filter:brightness(1.12);}
+
+/* ── 查找结果卡 ── */
+.quick-dish-list{display:flex;flex-direction:column;gap:10px;margin-bottom:4px;}
+.quick-dish-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fadeIn .25s ease;}
+.qdch{display:flex;align-items:center;gap:10px;padding:14px 14px 10px;}
+.qdsh-icon{width:42px;height:42px;background:#111;border:1px solid var(--border);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.qdsh-info{flex:1;}
+.qdsh-name{font-size:14px;font-weight:700;}
+.qdsh-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+.qd-match-tag{font-size:10px;background:rgba(6,214,160,.12);color:var(--accent3);border:1px solid rgba(6,214,160,.3);border-radius:6px;padding:3px 8px;white-space:nowrap;}
+.qd-reason{font-size:12px;color:var(--muted);line-height:1.6;padding:0 14px 12px;font-style:italic;border-bottom:1px solid var(--border);}
+.qd-dish-list{display:flex;flex-direction:column;}
+.qd-dish-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);}
+.qd-dish-row:last-child{border-bottom:none;}
+.qd-dish-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.qd-dish-e{font-size:22px;flex-shrink:0;}
+.qd-dish-info{flex:1;min-width:0;}
+.qd-dish-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;}
+.qd-hot{font-size:10px;background:rgba(255,107,53,.15);color:var(--accent);border-radius:4px;padding:1px 5px;font-weight:600;}
+.qd-dish-desc{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qd-dish-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.qd-dish-price{font-size:13px;color:var(--accent);font-weight:700;}
+.qd-order-row{padding:12px 14px;}
+.qd-order-btn{width:100%;background:linear-gradient(90deg,var(--accent),#ff8c5a);color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-family:inherit;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.qd-order-btn:hover{filter:brightness(1.12);}
+
+/* ── 同事推荐列表 ── */
+.rec-list{display:flex;flex-direction:column;gap:10px;margin-bottom:8px;}
+.rec-item{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;animation:fadeIn .3s ease;}
+.rec-item-top{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.rec-avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.rec-info{flex:1;min-width:0;}
+.rec-info .nm{font-size:13px;font-weight:600;}
+.rec-info .sh{font-size:12px;color:var(--accent);font-weight:600;margin-top:1px;}
+.rec-info .rr{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rec-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.rec-vote{font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 10px;cursor:pointer;transition:all .2s;color:var(--muted);white-space:nowrap;}
+.rec-vote:hover{border-color:var(--accent);color:var(--accent);}
+.rec-vote.voted{background:var(--accent);border-color:var(--accent);color:#fff;}
+.rec-expand-btn{font-size:10px;color:var(--muted);cursor:pointer;transition:color .2s;}
+.rec-expand-btn:hover{color:var(--accent2);}
+.rec-dishes{display:none;border-top:1px solid var(--border);padding:10px 14px 12px;background:rgba(0,0,0,.15);}
+.rec-dishes.open{display:block;}
+.rec-dishes-title{font-size:10px;color:var(--accent2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.rec-dish-list{display:flex;flex-direction:column;gap:7px;margin-bottom:10px;}
+.rec-dish-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--card);border:1px solid var(--border);border-radius:10px;}
+.d-icon{font-size:18px;}
+.d-meta{flex:1;}
+.d-name{font-size:12px;font-weight:600;}
+.d-desc{font-size:10px;color:var(--muted);}
+.d-price{font-size:12px;color:var(--accent);font-weight:700;}
+.d-hot{font-size:10px;background:rgba(255,107,53,.15);color:var(--accent);border-radius:4px;padding:2px 5px;}
+.rec-order-btn{width:100%;background:linear-gradient(90deg,var(--accent),#ff8c5a);color:#fff;border:none;border-radius:10px;padding:9px;font-size:12px;font-family:inherit;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px;}
+.rec-order-btn:hover{filter:brightness(1.15);}
+.rec-persons-preview{font-size:11px;color:var(--muted);margin-top:2px;}
+.rec-count{background:var(--accent);color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:4px;font-weight:600;}
+.rec-persons-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.rec-person{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 12px;}
+.rec-person-name{font-size:12px;font-weight:700;color:var(--accent3);}
+.rec-person-stars{font-size:11px;margin:0 6px;}
+.rec-person-reason{font-size:11px;color:var(--muted);}
+
+/* ── 标签 ── */
+.shop-tags-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
+.shop-tag-pill{font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(6,214,160,.1);color:var(--accent3);border:1px solid rgba(6,214,160,.3);}
+
+/* ── 榜单 ── */
+.rank-item{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+.rank-num{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;width:28px;text-align:center;}
+.rank-num.gold{color:#ffd700;}.rank-num.silver{color:#c0c0c0;}.rank-num.bronze{color:#cd7f32;}
+.rank-info{flex:1;}.rank-info h4{font-size:14px;}
+.rank-dish{font-size:11px;color:var(--accent);}.rank-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.rank-score{text-align:right;}.rank-score .big{font-size:22px;font-weight:700;color:var(--accent2);}.rank-score .count{font-size:10px;color:var(--muted);}
+.rank-toggle-btn{width:100%;background:none;border:1px dashed var(--border);color:var(--muted);border-radius:10px;padding:9px;font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s;margin-bottom:4px;}
+.rank-toggle-btn:hover{border-color:var(--accent);color:var(--accent);}
+.rank-like-btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:11px;font-family:inherit;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.rank-like-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+.rank-like-btn.liked{background:rgba(255,209,102,.12);border-color:var(--accent2);color:var(--accent2);}
+
+/* ── 我要推荐子Tab ── */
+.write-tabs{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:3px;margin-top:16px;gap:3px;}
+.write-tab{flex:1;padding:9px 0;text-align:center;font-size:12px;border-radius:9px;cursor:pointer;transition:all .2s;color:var(--muted);white-space:nowrap;}
+.write-tab.active{background:var(--card);color:var(--text);font-weight:600;border:1px solid var(--border);}
+
+/* ── 评分/推荐表单 ── */
+.score-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:12px;}
+.rate-step-title{font-size:11px;color:var(--accent2);letter-spacing:.08em;margin-bottom:10px;font-weight:600;}
+.rate-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;margin-bottom:10px;}
+.rate-input:focus{border-color:var(--accent);}
+.rate-input::placeholder{color:var(--muted);}
+.url-hint{font-size:11px;color:var(--muted);line-height:1.6;padding:6px 2px 12px;border-bottom:1px dashed var(--border);margin-bottom:12px;}
+.rate-info-tags{display:flex;gap:8px;flex-wrap:wrap;}
+.rate-info-tag{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--text);}
+.rate-info-tag.green{border-color:rgba(6,214,160,.4);background:rgba(6,214,160,.08);color:var(--accent3);}
+.dish-add-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.dish-add-row{display:flex;gap:6px;align-items:center;}
+.dish-add-row input{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s;margin-bottom:0;flex:1;}
+.dish-add-row input:focus{border-color:var(--accent);}
+.dish-add-row input::placeholder{color:var(--muted);}
+.dish-add-row input.price-input{flex:0 0 72px;}
+.dish-add-row .remove-btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;width:30px;height:36px;cursor:pointer;font-size:15px;transition:all .2s;flex-shrink:0;}
+.dish-add-row .remove-btn:hover{border-color:#ff4444;color:#ff4444;}
+.add-dish-btn{background:none;border:1px dashed var(--border);color:var(--muted);border-radius:10px;padding:8px;width:100%;font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s;margin-bottom:14px;}
+.add-dish-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+.stars{display:flex;gap:6px;margin-bottom:12px;}
+.star{font-size:24px;cursor:pointer;transition:transform .15s;opacity:.3;filter:grayscale(1);}
+.star.lit{opacity:1;filter:none;}.star:hover{transform:scale(1.2);}
+.score-dimensions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.dim-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center;cursor:pointer;transition:all .2s;}
+.dim-item.selected{border-color:var(--accent3);background:rgba(6,214,160,.08);}
+.dim-item .icon{font-size:18px;}.dim-item .label{font-size:10px;color:var(--muted);margin-top:3px;}
+.comment-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:12px;font-family:inherit;resize:none;outline:none;transition:border-color .2s;line-height:1.6;}
+.comment-input:focus{border-color:var(--accent3);}
+.comment-input::placeholder{color:var(--muted);}
+.submit-row{display:flex;gap:8px;margin-top:12px;justify-content:flex-end;}
+
+/* ── 店铺编辑卡 ── */
+.shop-edit-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;}
+.shop-edit-header{display:flex;align-items:center;gap:8px;padding:12px 14px 10px;cursor:pointer;user-select:none;}
+.shop-edit-icon{font-size:22px;}
+.shop-edit-name-display{flex:1;font-size:13px;font-weight:600;}
+.shop-edit-meta{font-size:10px;color:var(--muted);}
+.shop-edit-toggle{font-size:12px;color:var(--muted);}
+.shop-edit-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border);}
+.shop-edit-body.open{display:block;}
+.shop-edit-label{font-size:10px;color:var(--accent2);font-weight:600;letter-spacing:.06em;margin:10px 0 5px;}
+.shop-edit-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:12px;font-family:inherit;outline:none;transition:border-color .2s;margin-bottom:4px;}
+.shop-edit-input:focus{border-color:var(--accent);}
+.shop-edit-input::placeholder{color:var(--muted);}
+.shop-edit-textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:12px;font-family:inherit;outline:none;resize:none;line-height:1.5;margin-bottom:4px;}
+.shop-edit-textarea:focus{border-color:var(--accent);}
+.shop-edit-dishes{display:flex;flex-direction:column;gap:5px;margin-bottom:5px;}
+.shop-edit-dish-row{display:flex;gap:5px;align-items:center;}
+.shop-edit-dish-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;}
+.shop-edit-dish-row input.price{flex:0 0 62px;}
+.shop-edit-dish-row .rm{background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;width:28px;height:32px;cursor:pointer;font-size:14px;flex-shrink:0;}
+.shop-edit-dish-row .rm:hover{border-color:#ff4444;color:#ff4444;}
+.add-dish-small{background:none;border:1px dashed var(--border);color:var(--muted);border-radius:8px;padding:6px;width:100%;font-size:11px;font-family:inherit;cursor:pointer;transition:all .2s;margin-top:2px;}
+.add-dish-small:hover{border-color:var(--accent3);color:var(--accent3);}
+.del-shop-btn{width:100%;background:none;border:1px solid rgba(255,80,80,.3);color:rgba(255,100,100,.8);border-radius:8px;padding:7px;font-size:11px;font-family:inherit;cursor:pointer;margin-top:10px;transition:all .2s;}
+.del-shop-btn:hover{background:rgba(255,80,80,.08);border-color:rgba(255,80,80,.6);}
+.sec-stars{display:flex;gap:4px;margin-bottom:4px;}
+.sec-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.sec-tag-btn{font-size:11px;padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .2s;}
+.sec-tag-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+.sec-tag-btn.sel{border-color:var(--accent3);background:rgba(6,214,160,.08);color:var(--accent3);}
+
+/* ── 菜单预览弹窗 ── */
+.menu-modal-header{display:flex;align-items:center;justify-content:space-between;padding:18px 16px 12px;border-bottom:1px solid var(--border);}
+.menu-header-left{display:flex;align-items:center;gap:10px;}
+.menu-modal-reason{font-size:12px;color:var(--muted);font-style:italic;padding:10px 16px;line-height:1.6;border-bottom:1px solid var(--border);}
+.menu-dish-item{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--border);}
+.menu-dish-item:last-child{border-bottom:none;}
+.menu-dish-e{font-size:24px;flex-shrink:0;}
+.menu-dish-info{flex:1;min-width:0;}
+.menu-dish-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;}
+.menu-dish-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+.menu-dish-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.menu-dish-price{font-size:14px;color:var(--accent);font-weight:700;}
+
+/* ── 底部导航 ── */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(10,10,10,.9);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;padding:8px 16px 16px;z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;cursor:pointer;transition:all .2s;border-radius:12px;}
+.nav-item .icon{font-size:22px;}.nav-item .label{font-size:10px;color:var(--muted);}
+.nav-item.active .label{color:var(--accent);}.nav-item.active .icon{transform:scale(1.15);}
+
+/* ── 弹窗遮罩 ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.overlay.show{display:flex;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;animation:slideUp .35s cubic-bezier(.34,1.56,.64,1);}
+.modal h3{font-size:17px;margin-bottom:6px;}
+
+/* ── Toast ── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-60px);background:var(--accent3);color:#0f0e17;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:normal;max-width:88vw;text-align:center;line-height:1.5;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- 登入界面 -->
+<div id="login-screen">
+  <div class="login-logo">🍱</div>
+  <div class="login-title">MOHO <span class="ac">深夜食堂</span></div>
+  <div class="login-sub">输入你的专属昵称<br>让同事知道是谁在推荐好吃的！</div>
+  <div class="login-card">
+    <label>你的昵称</label>
+    <input class="lc-input" id="login-input" type="text" placeholder="如：小王、阿梅、夜宵达人…" maxlength="10" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-err" id="login-err"></div>
+    <div class="login-hint">昵称将显示在你的推荐和评价中 ✨</div>
+    <button class="login-btn" onclick="doLogin()">进入食堂 →</button>
+  </div>
+</div>
+
+<!-- 改名弹窗 -->
+<div class="overlay" id="rename-overlay" onclick="closeRenameModal(event)">
+  <div class="modal">
+    <h3>✏️ 修改昵称</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">新昵称将显示在你之后的推荐中</p>
+    <input class="rate-input" id="rename-input" type="text" placeholder="输入新昵称…" maxlength="10" onkeydown="if(event.key==='Enter')confirmRename()">
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn secondary" style="flex:1" onclick="closeRenameModal()">取消</button>
+      <button class="btn" style="flex:2" onclick="confirmRename()">确认修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 菜单预览弹窗 -->
+<div class="overlay" id="menu-overlay" onclick="closeMenuModal(event)">
+  <div class="modal" style="padding:0;overflow:hidden;max-height:85vh;display:flex;flex-direction:column;">
+    <div class="menu-modal-header">
+      <div class="menu-header-left">
+        <span id="menu-shop-icon" style="font-size:26px;"></span>
+        <div>
+          <div id="menu-shop-name" style="font-size:15px;font-weight:700;"></div>
+          <div id="menu-shop-meta" style="font-size:11px;color:var(--muted);margin-top:2px;"></div>
+        </div>
+      </div>
+      <div class="sec-close" onclick="closeMenuModal()">✕</div>
+    </div>
+    <div id="menu-reason" class="menu-modal-reason"></div>
+    <div style="padding:10px 16px 6px;font-size:11px;color:var(--accent2);font-weight:600;letter-spacing:.06em;">🍽 推荐菜品一览，点击下方按钮进店选购</div>
+    <div id="menu-dish-list" style="overflow-y:auto;flex:1;"></div>
+    <div style="padding:14px 16px 24px;border-top:1px solid var(--border);">
+      <button class="sec-order-btn" id="menu-jump-all" onclick="">🛒 直接进店，自己挑</button>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="time-badge"><span class="dot-live"></span><span id="clock">22:47</span> · 今晚加班</div>
+    <h1><span class="brand">MOHO</span> <span class="hl">深夜食堂</span> 🍱</h1>
+    <p>加班吃什么 轻松点餐</p>
+    <div class="user-badge" onclick="openRenameModal()">👤 <span id="header-username">…</span></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('rec')">🙋 求推荐</div>
+    <div class="tab" onclick="switchTab('rate')">🏆 榜单</div>
+    <div class="tab" onclick="switchTab('write')">✍️ 我要推荐</div>
+  </div>
+
+  <!-- ══ 求推荐 ══ -->
+  <div class="page active" id="page-rec">
+    <div class="recommend-box">
+      <h3>💬 今晚想吃什么？</h3>
+      <p>输入关键词匹配推荐，或点随机试试手气！</p>
+      <div class="input-row">
+        <input id="rec-input" type="text" placeholder="炸鸡、寿司、饺子…" maxlength="20"
+          onkeydown="if(event.key==='Enter')doSearch()">
+        <button class="btn search-btn" onclick="doSearch()">🔍 查找</button>
+        <button class="btn random-btn" onclick="randomShop()">🎲 随机</button>
+      </div>
+    </div>
+
+    <!-- 今日好店（动态渲染） -->
+    <div id="today-shops-section">
+      <div class="section-title">🏪 今日好店</div>
+      <div class="shop-browse-scroll" id="shop-browse-scroll"></div>
+    </div><!-- end today-shops-section -->
+
+    <!-- 展开店铺详情 -->
+    <div id="shop-expand-panel" style="display:none"><div id="shop-expand-content"></div></div>
+
+    <!-- 查找结果 -->
+    <div id="quick-suggest" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 10px">
+        <div class="section-title" style="margin:0">🔍 查找结果</div>
+        <span style="font-size:11px;color:var(--muted);cursor:pointer;" onclick="resetSearch()">✕ 清除</span>
+      </div>
+      <div id="quick-dish-list" class="quick-dish-list"></div>
+    </div>
+
+    <div class="section-title">👥 同事推荐</div>
+    <div class="rec-list" id="rec-list"></div>
+    <button class="btn secondary" style="width:100%;margin-top:4px" onclick="goToWriteReview()">✍️ 我也来推荐一家</button>
+  </div>
+
+  <!-- ══ 榜单 ══ -->
+  <div class="page" id="page-rate">
+    <div class="section-title">🏆 评分排行榜</div>
+    <div id="rank-list"></div>
+    <button class="rank-toggle-btn" id="rank-toggle" onclick="toggleRankRest()" style="display:none">查看更多 ▾</button>
+  </div>
+
+  <!-- ══ 我要推荐 ══ -->
+  <div class="page" id="page-write">
+    <div class="write-tabs">
+      <div class="write-tab active" id="wtab-form" onclick="switchWriteTab('form')">✍️ 填写推荐</div>
+      <div class="write-tab" id="wtab-shops" onclick="switchWriteTab('shops')">🏪 管理推荐</div>
+    </div>
+
+    <!-- 填写推荐 -->
+    <div id="wview-form">
+      <div class="score-card" style="margin-top:12px">
+        <div class="rate-step-title">🏪 店铺信息</div>
+        <div class="url-input-wrap">
+          <textarea class="rate-input" id="rate-paste-input" rows="3"
+            style="resize:none;margin-bottom:4px;font-size:12px;line-height:1.6;"
+            placeholder="① 直接粘贴淘宝闪购的分享内容&#10;例：淘宝闪购，品质美食...30分钟送达无名钵钵鸡：https://..."
+            oninput="parsePasteInput(this.value)"></textarea>
+          <input type="hidden" id="rate-delivery-input">
+          <div class="url-hint" id="url-hint-text">💡 打开淘宝闪购 → 进入店铺 → 右上角分享 → 复制链接 → 整段粘贴进来，自动识别</div>
+        </div>
+        <input class="rate-input" id="rate-shop-input" type="text" placeholder="② 店铺名称（粘贴后自动填入，可修改）">
+        <input type="hidden" id="rate-url-input">
+        <div id="rate-info-row" style="display:none;margin-bottom:12px;">
+          <div class="rate-info-tags">
+            <div class="rate-info-tag" id="rate-delivery-tag" style="display:none"><span>⏱</span><span id="rate-delivery-label"></span></div>
+            <div class="rate-info-tag green" id="rate-link-tag" style="display:none"><span>🔗</span><span>直达链接已保存</span></div>
+          </div>
+        </div>
+        <input class="rate-input" id="rate-reason-input" type="text" placeholder="③ 推荐理由（如：汤底超鲜，加班必吃！）">
+        <div class="rate-step-title" style="margin-top:14px">🍽 推荐菜品</div>
+        <div id="rate-dish-list" class="dish-add-list">
+          <div class="dish-add-row">
+            <input type="text" class="dish-name-input" placeholder="菜品名称">
+            <input type="text" class="price-input" placeholder="¥价格">
+            <button class="remove-btn" onclick="removeRateDish(this)">×</button>
+          </div>
+        </div>
+        <button class="add-dish-btn" onclick="addRateDish()">＋ 添加菜品</button>
+        <div class="rate-step-title">⭐ 综合评分</div>
+        <div class="stars" id="stars">
+          <span class="star" onclick="setStar(1)">⭐</span>
+          <span class="star" onclick="setStar(2)">⭐</span>
+          <span class="star" onclick="setStar(3)">⭐</span>
+          <span class="star" onclick="setStar(4)">⭐</span>
+          <span class="star" onclick="setStar(5)">⭐</span>
+        </div>
+        <div class="rate-step-title" style="margin-top:4px">🏷 打标签</div>
+        <div class="score-dimensions" id="score-dimensions">
+          <div class="dim-item" onclick="toggleDim(this,'😋 味道好')"><div class="icon">😋</div><div class="label">味道好</div></div>
+          <div class="dim-item" onclick="toggleDim(this,'⚡ 送得快')"><div class="icon">⚡</div><div class="label">送得快</div></div>
+          <div class="dim-item" onclick="toggleDim(this,'💰 超值')"><div class="icon">💰</div><div class="label">超值</div></div>
+          <div class="dim-item" onclick="toggleDim(this,'🍱 份量大')"><div class="icon">🍱</div><div class="label">份量大</div></div>
+          <div class="dim-item" onclick="toggleDim(this,'📦 包装好')"><div class="icon">📦</div><div class="label">包装好</div></div>
+          <div class="dim-item" onclick="toggleDim(this,'🔁 会回购')"><div class="icon">🔁</div><div class="label">会回购</div></div>
+        </div>
+        <div id="custom-tags-row" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
+        <div id="add-tag-row" style="display:flex;gap:6px;margin-top:8px;">
+          <input id="custom-tag-input" class="rate-input" type="text" maxlength="10"
+            placeholder="自定义标签…" style="margin-bottom:0;font-size:12px;padding:7px 12px;"
+            onkeydown="if(event.key==='Enter')addCustomTag()">
+          <button class="btn secondary" style="font-size:12px;padding:7px 12px;flex-shrink:0" onclick="addCustomTag()">＋ 添加</button>
+        </div>
+        <textarea class="comment-input" id="comment-input" rows="2" placeholder="还有什么想说的？帮同事下次做决定 ✍️"></textarea>
+        <div class="submit-row">
+          <button class="btn secondary" onclick="clearRateForm()">清空</button>
+          <button class="btn green" onclick="submitRateForm()">提交推荐 ✓</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 管理推荐 -->
+    <div id="wview-shops" style="display:none">
+      <div style="display:flex;justify-content:flex-end;margin:12px 0 8px;">
+        <button class="btn secondary" style="font-size:11px;padding:5px 12px" onclick="addNewShopInSettings()">＋ 新增店铺</button>
+      </div>
+      <div id="settings-shop-list"></div>
+      <button class="btn green" style="width:100%;margin-top:8px;margin-bottom:16px" onclick="saveAllSettings()">✓ 保存所有修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 底部导航 -->
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-rec" onclick="switchTab('rec')"><span class="icon">🙋</span><span class="label">求推荐</span></div>
+  <div class="nav-item" id="nav-rate" onclick="switchTab('rate')"><span class="icon">🏆</span><span class="label">榜单</span></div>
+  <div class="nav-item" id="nav-write" onclick="switchTab('write')"><span class="icon">✍️</span><span class="label">我要推荐</span></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// 数据源
+// ══════════════════════════════════════════
+const SHOPS = {
+  '渔你有约·酸菜鱼': {
+    icon:'🐟', meta:'川湘 · ★4.8 · 30min · 人均¥45', url:'',
+    reason:'加班首选！汤底酸辣鲜美，鱼肉嫩滑不腥，冬天喝一口暖到心里，附赠米饭管够。',
+    keywords:['鱼','酸菜','酸辣','川菜','辣','麻辣','川湘'],
+    tags:['😋 味道好','🍱 份量大'],
+    dishes:[
+      {e:'🐟',n:'招牌酸菜鱼',p:'¥38',hot:true,desc:'经典款，酸辣适中，鱼片嫩滑'},
+      {e:'🍅',n:'番茄鱼',p:'¥42',desc:'偏甜口不辣，不吃辣的同事必点'},
+      {e:'🌿',n:'藤椒鱼',p:'¥40',desc:'麻香浓郁，花椒爱好者狂喜'}
+    ]
+  },
+  '鱼鳞寿司': {
+    icon:'🍣', meta:'日料 · ★4.9 · 25min · 人均¥68', url:'',
+    reason:'加班吃日料！每日空运食材，新鲜度拉满。想换口味、吃点精致的就选这家。',
+    keywords:['寿司','日料','刺身','三文鱼','海鲜','日式'],
+    tags:['😋 味道好','💰 超值'],
+    dishes:[
+      {e:'🍣',n:'三文鱼刺身',p:'¥58',hot:true,desc:'每日新鲜直送，入口即化，值得'},
+      {e:'🥣',n:'海胆饭',p:'¥78',desc:'鲜甜浓郁，量大管饱，性价比之王'},
+      {e:'🥚',n:'玉子烧套餐',p:'¥48',desc:'附味增汤和小菜，暖胃又满足'}
+    ]
+  },
+  '蒸汽鲜生·饺子': {
+    icon:'🥟', meta:'面食 · ★4.7 · 20min · 人均¥28', url:'',
+    reason:'深夜最暖的选择！皮薄馅大，汤底鲜甜，20分钟就能送到，饿了不用等太久。',
+    keywords:['饺子','面','馄饨','水饺','蒸饺','面食','主食','暖胃'],
+    tags:['⚡ 送得快','💰 超值'],
+    dishes:[
+      {e:'🥟',n:'鲜肉大虾饺',p:'¥26',hot:true,desc:'招牌款，弹牙虾肉配鲜猪肉'},
+      {e:'🥩',n:'黑猪白菜水饺',p:'¥22',desc:'传统家常味，暖胃又治愈'},
+      {e:'🌶',n:'酸汤水饺',p:'¥24',desc:'酸辣开胃，提神醒脑赶稿必备'}
+    ]
+  },
+  '深夜炸鸡研究所': {
+    icon:'🍗', meta:'炸鸡 · ★4.6 · 15min · 人均¥35', url:'',
+    reason:'加班续命神器！15分钟闪电送达，脆皮炸鸡配薯条，吃完立刻满血复活。',
+    keywords:['炸鸡','鸡','鸡排','汉堡','快餐','薯条','脆皮','鸡腿'],
+    tags:['⚡ 送得快','🔁 会回购'],
+    dishes:[
+      {e:'🍗',n:'无骨鸡排饭',p:'¥28',hot:true,desc:'脆皮多汁，饭量够大，吃完不饿'},
+      {e:'🍖',n:'脆皮炸鸡腿',p:'¥22',desc:'外酥里嫩，越嚼越香'},
+      {e:'🍟',n:'薯条大桶',p:'¥12',desc:'超大分量，刷题追稿的好伴侣'}
+    ]
+  }
+};
+
+const recData = [
+  { shop:'渔你有约·酸菜鱼', icon:'🐟', user:'小王', stars:5, reason:'鱼肉嫩滑，汤底超鲜，加班必吃！', votes:3, tags:['😋 味道好','🍱 份量大'],
+    dishes:[{e:'🐟',n:'招牌酸菜鱼',p:'¥38',hot:true,desc:'经典款，汤底酸辣适中，鱼片嫩'},
+            {e:'🍅',n:'番茄鱼',p:'¥42',desc:'偏甜口，不辣，适合不吃辣的同事'},
+            {e:'🌿',n:'藤椒鱼',p:'¥40',desc:'麻香浓郁，爱吃花椒的必点'}]},
+  { shop:'鱼鳞寿司', icon:'🍣', user:'阿梅', stars:5, reason:'日料加班也能吃到，食材超级新鲜', votes:5, tags:['😋 味道好','💰 超值'],
+    dishes:[{e:'🍣',n:'三文鱼刺身',p:'¥58',hot:true,desc:'每日新鲜直送，入口即化'},
+            {e:'🥣',n:'海胆饭',p:'¥78',desc:'鲜甜浓郁，量大管饱'},
+            {e:'🥚',n:'玉子烧套餐',p:'¥48',desc:'搭配味增汤，性价比高'}]},
+  { shop:'蒸汽鲜生·饺子', icon:'🥟', user:'大刚', stars:4, reason:'20分钟送到，熬夜饿了吃饺子最暖', votes:2, tags:['⚡ 送得快'],
+    dishes:[{e:'🥟',n:'鲜肉大虾饺',p:'¥26',hot:true,desc:'皮薄馅大，一口一个停不下来'},
+            {e:'🥩',n:'黑猪白菜水饺',p:'¥22',desc:'传统口味，暖胃'}]},
+];
+
+const rankData = [
+  {name:'鱼鳞寿司',       dish:'三文鱼刺身 · 海胆饭', meta:'12人评分 · 食材新鲜，性价比高', score:4.9, count:12},
+  {name:'渔你有约·酸菜鱼', dish:'招牌酸菜鱼',          meta:'8人评分 · 份量足，汤底鲜',     score:4.8, count:8},
+  {name:'深夜炸鸡研究所',  dish:'无骨鸡排饭',          meta:'15人评分 · 快，香，过瘾',      score:4.6, count:15},
+  {name:'蒸汽鲜生·饺子',  dish:'鲜肉大虾饺',          meta:'6人评分 · 皮薄馅大，暖胃',     score:4.5, count:6},
+];
+
+// ══════════════════════════════════════════
+// 登入
+// ══════════════════════════════════════════
+let currentUsername = '';
+
+function _applyUsername(name) {
+  currentUsername = name;
+  document.getElementById('header-username').textContent = name;
+}
+function _hideLoginScreen() {
+  const s = document.getElementById('login-screen');
+  s.classList.add('out');
+  setTimeout(() => s.style.display = 'none', 380);
+}
+(function initLogin() {
+  try {
+    const saved = localStorage.getItem('moho_username');
+    if (saved) {
+      _applyUsername(saved);
+      const s = document.getElementById('login-screen');
+      s.classList.add('out');
+      setTimeout(() => s.style.display = 'none', 380);
+    }
+    const urls = JSON.parse(localStorage.getItem('moho_shop_urls') || '{}');
+    Object.entries(urls).forEach(([k,v]) => { if (SHOPS[k]) SHOPS[k].url = v; });
+  } catch(e) {}
+})();
+function doLogin() {
+  const val = document.getElementById('login-input').value.trim();
+  if (!val) { document.getElementById('login-err').textContent='请输入昵称才能进入 😊'; return; }
+  _applyUsername(val);
+  try { localStorage.setItem('moho_username', val); } catch(e) {}
+  _hideLoginScreen();
+}
+
+// ══════════════════════════════════════════
+// 改名
+// ══════════════════════════════════════════
+function openRenameModal() {
+  document.getElementById('rename-input').value = currentUsername;
+  document.getElementById('rename-overlay').classList.add('show');
+  setTimeout(() => document.getElementById('rename-input').focus(), 120);
+}
+function closeRenameModal(e) {
+  if (!e || e.target === document.getElementById('rename-overlay'))
+    document.getElementById('rename-overlay').classList.remove('show');
+}
+function confirmRename() {
+  const v = document.getElementById('rename-input').value.trim();
+  if (!v) return;
+  _applyUsername(v);
+  try { localStorage.setItem('moho_username', v); } catch(e) {}
+  document.getElementById('rename-overlay').classList.remove('show');
+  showToast('✅ 昵称已更新为「' + v + '」');
+}
+
+// ══════════════════════════════════════════
+// 时钟
+// ══════════════════════════════════════════
+function updateClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+updateClock(); setInterval(updateClock, 30000);
+
+// ══════════════════════════════════════════
+// Toast
+// ══════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ══════════════════════════════════════════
+// Tab 切换
+// ══════════════════════════════════════════
+function switchTab(tab) {
+  const tabs = ['rec','rate','write'];
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', tabs[i]===tab));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', tabs[i]===tab));
+  if (tab === 'rate') renderRankList();
+  if (tab === 'write') switchWriteTab('form');
+}
+function switchWriteTab(view) {
+  ['form','shops'].forEach(v => {
+    document.getElementById('wview-'+v).style.display = v===view ? 'block' : 'none';
+    document.getElementById('wtab-'+v).classList.toggle('active', v===view);
+  });
+  if (view === 'shops') _renderSettingsShops();
+}
+function goToWriteReview() { switchTab('write'); }
+
+// ══════════════════════════════════════════
+// 标签渲染辅助
+// ══════════════════════════════════════════
+function _renderTags(tags) {
+  if (!tags || !tags.length) return '';
+  return `<div class="shop-tags-row">${tags.map(t=>`<span class="shop-tag-pill">${t}</span>`).join('')}</div>`;
+}
+
+// ══════════════════════════════════════════
+// 今日好店展开
+// ══════════════════════════════════════════
+let expandedShop = '';
+function expandShopCard(name) {
+  const panel = document.getElementById('shop-expand-panel');
+  const content = document.getElementById('shop-expand-content');
+  if (expandedShop === name) {
+    panel.style.display = 'none'; expandedShop = '';
+    document.querySelectorAll('.shop-browse-card').forEach(c => c.classList.remove('active'));
+    return;
+  }
+  expandedShop = name;
+  document.querySelectorAll('.shop-browse-card').forEach(c =>
+    c.classList.toggle('active', c.querySelector('.sbc-name')?.textContent === name));
+  const s = SHOPS[name]; if (!s) return;
+  const dishRows = s.dishes.map(d => `
+    <div class="sec-dish-row">
+      <div class="sec-dish-e">${d.e}</div>
+      <div class="sec-dish-info">
+        <div class="sec-dish-name">${d.n}${d.hot?' <span class="qd-hot">🔥 必点</span>':''}</div>
+        <div class="sec-dish-desc">${d.desc}</div>
+      </div>
+      <div class="sec-dish-right"><span class="sec-dish-price">${d.p}</span></div>
+    </div>`).join('');
+  content.innerHTML = `
+    <div class="shop-expand-card">
+      <div class="sec-header">
+        <div class="sec-icon">${s.icon}</div>
+        <div class="sec-info">
+          <div class="sec-name">${name}</div>
+          <div class="sec-meta">${s.meta}</div>
+          ${_renderTags(s.tags)}
+        </div>
+        <div class="sec-close" onclick="expandShopCard('${name}')">✕</div>
+      </div>
+      <div class="sec-reason">"${s.reason}"</div>
+      <div class="sec-dish-list">${dishRows}</div>
+      <div class="sec-order-all">
+        <button class="sec-order-btn" onclick="jumpTaobao('${name}','')">🛒 去店铺点餐</button>
+      </div>
+    </div>`;
+  panel.style.display = 'block';
+  setTimeout(() => panel.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
+}
+
+// ══════════════════════════════════════════
+// 查找 — 修正：整体关键词匹配
+// ══════════════════════════════════════════
+function _matchShop(shopName, s, q) {
+  // 整体匹配：输入词包含在某个 target 里，或某个 target 包含在输入词里
+  const targets = [shopName, ...s.keywords, ...s.dishes.map(d => d.n)];
+  return targets.some(t => t.includes(q) || q.includes(t));
+}
+
+function doSearch() {
+  const val = document.getElementById('rec-input').value.trim();
+  if (!val) return showToast('请输入想吃的内容 😋');
+  const matched = Object.entries(SHOPS).filter(([name, s]) => _matchShop(name, s, val));
+  // 隐藏今日好店，显示查找结果
+  document.getElementById('today-shops-section').style.display = 'none';
+  document.getElementById('shop-expand-panel').style.display = 'none';
+  if (!matched.length) {
+    document.getElementById('quick-suggest').style.display = 'none';
+    showToast('😅 没找到匹配，换个关键词试试？');
+    return;
+  }
+  onRecInput(val);
+  setTimeout(() => document.getElementById('quick-suggest').scrollIntoView({behavior:'smooth', block:'start'}), 100);
+}
+
+function resetSearch() {
+  document.getElementById('rec-input').value = '';
+  document.getElementById('quick-suggest').style.display = 'none';
+  document.getElementById('today-shops-section').style.display = 'block';
+}
+
+// 自定义标签
+function addCustomTag() {
+  const input = document.getElementById('custom-tag-input');
+  const val = input.value.trim();
+  if (!val) return;
+  if (selectedDims.has(val)) { showToast('标签已存在'); return; }
+  selectedDims.add(val);
+  const row = document.getElementById('custom-tags-row');
+  const tag = document.createElement('div');
+  tag.className = 'dim-item selected';
+  tag.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;font-size:11px;cursor:pointer;';
+  tag.innerHTML = `<span>${val}</span><span onclick="removeCustomTag(this,'${val.replace(/'/g,"\\'")}');event.stopPropagation()" style="opacity:.6;margin-left:2px">×</span>`;
+  tag.onclick = () => { tag.classList.toggle('selected'); selectedDims.has(val)?selectedDims.delete(val):selectedDims.add(val); };
+  row.appendChild(tag);
+  input.value = '';
+}
+
+function onRecInput(val) {
+  const box = document.getElementById('quick-suggest');
+  const list = document.getElementById('quick-dish-list');
+  const q = val.trim();
+  if (!q) { box.style.display = 'none'; return; }
+  const matched = Object.entries(SHOPS).filter(([name, s]) => _matchShop(name, s, q));
+  if (!matched.length) { box.style.display = 'none'; return; }
+  list.innerHTML = matched.map(([name, s]) => {
+    const dishRows = s.dishes.map(d => `
+      <div class="qd-dish-row">
+        <div class="qd-dish-left">
+          <span class="qd-dish-e">${d.e}</span>
+          <div class="qd-dish-info">
+            <div class="qd-dish-name">${d.n}${d.hot?' <span class="qd-hot">🔥 必点</span>':''}</div>
+            <div class="qd-dish-desc">${d.desc}</div>
+          </div>
+        </div>
+        <div class="qd-dish-right"><span class="qd-dish-price">${d.p}</span></div>
+      </div>`).join('');
+    return `
+      <div class="quick-dish-card">
+        <div class="qdch">
+          <div class="qdsh-icon">${s.icon}</div>
+          <div class="qdsh-info">
+            <div class="qdsh-name">${name}</div>
+            <div class="qdsh-meta">${s.meta}</div>
+          </div>
+          <div class="qd-match-tag">✨ 匹配</div>
+        </div>
+        <div class="qd-reason">"${s.reason}"</div>
+        ${_renderTags(s.tags)}
+        <div class="qd-dish-list">${dishRows}</div>
+        <div class="qd-order-row">
+          <button class="qd-order-btn" onclick="jumpTaobao('${name}','')">🛒 去店铺点餐</button>
+        </div>
+      </div>`;
+  }).join('');
+  box.style.display = 'block';
+}
+
+// ══════════════════════════════════════════
+// 随机
+// ══════════════════════════════════════════
+function randomShop() {
+  const names = Object.keys(SHOPS);
+  const name = names[Math.floor(Math.random() * names.length)];
+  document.getElementById('today-shops-section').style.display = 'block';
+  document.getElementById('quick-suggest').style.display = 'none';
+  document.getElementById('rec-input').value = '';
+  expandedShop = '';
+  expandShopCard(name);
+  showToast('🎲 随机推荐：「' + name + '」');
+}
+
+// ══════════════════════════════════════════
+// 今日好店 — 综合排序，每日用日期做种子
+// ══════════════════════════════════════════
+function renderTodayShops() {
+  const today = new Date();
+  const seed = today.getFullYear()*10000 + (today.getMonth()+1)*100 + today.getDate();
+  // 综合分：评分*10 + 累计点赞
+  const scored = Object.entries(SHOPS).map(([name, s], globalIdx) => {
+    const rd = rankData.find(r => r.name === name);
+    const scoreBase = rd ? rd.score * 10 : 0;
+    const votes = recData.filter(r => r.shop === name).reduce((a,b)=>a+(b.votes||0),0);
+    // 同分时用日期种子打散
+    const tieBreak = ((seed * (globalIdx + 7)) % 97) / 97;
+    return { name, s, score: scoreBase + votes + tieBreak };
+  });
+  scored.sort((a,b) => b.score - a.score);
+
+  const scroll = document.getElementById('shop-browse-scroll');
+  if (!scroll) return;
+  scroll.innerHTML = scored.map(({name, s}) => {
+    const rd = rankData.find(r => r.name === name);
+    const badge = rd ? `★ ${rd.score.toFixed(1)}` : '新店';
+    const topDishes = (s.dishes||[]).slice(0,2).map(d=>d.n).join(' · ') || '暂无菜品';
+    const category = s.meta ? s.meta.split('·')[0].trim() : '美食';
+    return `
+      <div class="shop-browse-card" onclick="expandShopCard('${name}')">
+        <div class="sbc-top"><div class="sbc-icon">${s.icon||'🍽'}</div><div class="sbc-badge">${badge}</div></div>
+        <div class="sbc-name">${name}</div>
+        <div class="sbc-tag">${category}</div>
+        <div class="sbc-dishes">${topDishes}</div>
+        <button class="sbc-btn" onclick="event.stopPropagation();jumpTaobao('${name}','')">🛒 点餐</button>
+      </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// 同事推荐渲染（按店铺合并）
+// ══════════════════════════════════════════
+function renderRecList() {
+  const shopMap = {};
+  recData.forEach(r => {
+    if (!shopMap[r.shop]) shopMap[r.shop] = {shop:r.shop, icon:r.icon, entries:[], dishes:r.dishes||[], votes:r.votes||0};
+    shopMap[r.shop].entries.push({user:r.user, stars:r.stars, reason:r.reason, tags:r.tags||[]});
+    if (r.dishes) {
+      const ex = new Set(shopMap[r.shop].dishes.map(d=>d.n));
+      r.dishes.forEach(d => { if (!ex.has(d.n)) shopMap[r.shop].dishes.push(d); });
+    }
+    shopMap[r.shop].votes = Math.max(shopMap[r.shop].votes, r.votes||0);
+  });
+  const icons = ['🍜','🥘','🍱','🥗','🍛','🥩','🍣','🥟'];
+  document.getElementById('rec-list').innerHTML = Object.values(shopMap).map(s => {
+    const dishRows = s.dishes.map((d,i) => `
+      <div class="rec-dish-row">
+        <div class="d-icon">${d.e||icons[i%icons.length]}</div>
+        <div class="d-meta"><div class="d-name">${d.n}</div><div class="d-desc">${d.desc||''}</div></div>
+        ${d.hot?'<div class="d-hot">🔥 必点</div>':''}
+        <div class="d-price">${d.p}</div>
+      </div>`).join('');
+    const recommenders = s.entries.map(e => `
+      <div class="rec-person">
+        <span class="rec-person-name">${e.user}</span>
+        <span class="rec-person-stars">${'⭐'.repeat(e.stars)}</span>
+        <span class="rec-person-reason">${e.reason}</span>
+        ${_renderTags(e.tags)}
+      </div>`).join('');
+    const avg = s.entries.length ? (s.entries.reduce((a,b)=>a+b.stars,0)/s.entries.length).toFixed(1) : '';
+    const allTags = [...new Set(s.entries.flatMap(e=>e.tags||[]))];
+    const avatarContent = s.entries.length > 1
+      ? `<span style="font-size:13px;font-weight:700;color:#fff">${s.entries.length}人</span>`
+      : `<span style="font-size:19px">${s.icon}</span>`;
+    return `
+      <div class="rec-item">
+        <div class="rec-item-top" onclick="toggleRecDishes(this)">
+          <div class="rec-avatar">${avatarContent}</div>
+          <div class="rec-info">
+            <div class="sh" style="font-size:14px;font-weight:700;color:var(--text)">${s.shop}</div>
+            <div class="rec-persons-preview">${s.entries.map(e=>e.user).join('、')} 推荐
+              ${s.entries.length>1?`<span class="rec-count">${s.entries.length}人</span>`:''}
+            </div>
+            ${avg?`<div class="nm" style="color:var(--accent2)">综合 ⭐${avg}</div>`:''}
+            ${_renderTags(allTags)}
+          </div>
+          <div class="rec-right">
+            <div class="rec-vote" onclick="event.stopPropagation();vote(this)">👍 ${s.votes}</div>
+            <div class="rec-expand-btn">详情 ▾</div>
+          </div>
+        </div>
+        <div class="rec-dishes">
+          <div class="rec-dishes-title">👥 推荐人</div>
+          <div class="rec-persons-list">${recommenders}</div>
+          ${dishRows?`<div class="rec-dishes-title" style="margin-top:10px">🍽 推荐菜品</div><div class="rec-dish-list">${dishRows}</div>`:''}
+          <button class="rec-order-btn" onclick="jumpTaobao('${s.shop}','')">🛒 去淘宝闪购点餐</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+renderRecList();
+renderTodayShops();
+
+// ══════════════════════════════════════════
+// 榜单
+// ══════════════════════════════════════════
+let rankShowAll = false;
+const MEDALS = ['🥇','🥈','🥉'];
+const likedRanks = new Set(); // 声明在 renderRankList 之前，避免 TDZ
+
+function renderRankList() {
+  const sorted = [...rankData].sort((a,b) => b.score - a.score);
+  const list = document.getElementById('rank-list');
+  if (!list) return;
+  list.innerHTML = sorted.map((r,i) => {
+    const hidden = i >= 3 && !rankShowAll;
+    const medal = i<3 ? MEDALS[i] : (i+1);
+    const cls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const liked = likedRanks.has(r.name);
+    return `<div class="rank-item" style="${hidden?'display:none':''}">
+      <div class="rank-num ${cls}">${medal}</div>
+      <div class="rank-info"><h4>${r.name}</h4><div class="rank-dish">★ ${r.dish}</div><div class="rank-meta">${r.meta}</div></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div class="rank-score"><div class="big">${r.score.toFixed(1)}</div><div class="count">${r.count}次</div></div>
+        <button class="rank-like-btn${liked?' liked':''}" onclick="likeRankItem('${r.name}',this)">
+          👍 ${r.likes||0}
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+  const btn = document.getElementById('rank-toggle');
+  if (btn) {
+    btn.style.display = sorted.length > 3 ? 'block' : 'none';
+    btn.textContent = rankShowAll ? '收起 ▴' : `查看更多（${sorted.length-3}家）▾`;
+  }
+}
+function toggleRankRest() { rankShowAll = !rankShowAll; renderRankList(); }
+
+function likeRankItem(name, btn) {
+  if (likedRanks.has(name)) { showToast('你已经👍过这家了'); return; }
+  likedRanks.add(name);
+  const rd = rankData.find(r => r.name === name);
+  if (rd) rd.likes = (rd.likes||0) + 1;
+  btn.classList.add('liked');
+  btn.textContent = '👍 ' + (rd?.likes||1);
+  // 已在同事推荐中（任何 user）则只更新 votes，否则新增
+  const shopEntry = recData.find(r => r.shop === name && r.user.includes('点赞'));
+  if (shopEntry) {
+    shopEntry.votes = (shopEntry.votes||0) + 1;
+  } else {
+    const s = SHOPS[name];
+    recData.push({
+      shop: name,
+      icon: s?.icon || '🍽',
+      user: currentUsername ? `${currentUsername}（点赞）` : '匿名（点赞）',
+      stars: rd ? Math.round(rd.score) : 0,
+      reason: '来自榜单点赞 👍',
+      votes: 1,
+      tags: s?.tags || [],
+      dishes: s?.dishes || []
+    });
+  }
+  renderRecList();
+  renderTodayShops();
+  showToast(`👍 已为「${name}」点赞！`);
+}
+
+// ══════════════════════════════════════════
+// 跳转淘宝闪购
+// ══════════════════════════════════════════
+function jumpTaobao(shopName, dishName) {
+  const s = SHOPS[shopName];
+  if (s?.url) {
+    window.open(s.url, '_blank');
+  } else {
+    const q = encodeURIComponent(shopName + (dishName?' '+dishName:''));
+    window.open('https://market.m.taobao.com/app/dinamic-fe/sg-home/index.html?query='+q, '_blank');
+  }
+  showToast('🛒 已跳转淘宝闪购，点完记得来推荐！');
+}
+
+function openMenuPicker(shopName, s) {
+  if (!s) s = SHOPS[shopName];
+  document.getElementById('menu-shop-icon').textContent = s?.icon||'🍽';
+  document.getElementById('menu-shop-name').textContent = shopName;
+  document.getElementById('menu-shop-meta').textContent = s?.meta||'';
+  document.getElementById('menu-reason').textContent = s?.reason||'';
+  const list = document.getElementById('menu-dish-list');
+  list.innerHTML = (s?.dishes||[]).map(d => `
+    <div class="menu-dish-item">
+      <div class="menu-dish-e">${d.e}</div>
+      <div class="menu-dish-info">
+        <div class="menu-dish-name">${d.n}${d.hot?' <span class="qd-hot">🔥 必点</span>':''}</div>
+        <div class="menu-dish-desc">${d.desc||''}</div>
+      </div>
+      <div class="menu-dish-right"><span class="menu-dish-price">${d.p}</span></div>
+    </div>`).join('') || '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">暂无菜品，进店自行选择</div>';
+  document.getElementById('menu-jump-all').onclick = () => { closeMenuModal(); jumpTaobao(shopName,''); };
+  document.getElementById('menu-overlay').classList.add('show');
+}
+function closeMenuModal(e) {
+  if (!e || e.target === document.getElementById('menu-overlay'))
+    document.getElementById('menu-overlay').classList.remove('show');
+}
+
+// ══════════════════════════════════════════
+// 推荐卡展开/收起
+// ══════════════════════════════════════════
+function toggleRecDishes(topEl) {
+  const dishes = topEl.nextElementSibling;
+  const btn = topEl.querySelector('.rec-expand-btn');
+  if (!dishes || !btn) return;
+  const open = dishes.classList.toggle('open');
+  btn.textContent = open ? '详情 ▴' : '详情 ▾';
+}
+function vote(el) {
+  if (el.classList.contains('voted')) return;
+  el.classList.add('voted');
+  const m = el.textContent.match(/\d+/);
+  const newCount = m ? parseInt(m[0])+1 : 1;
+  el.textContent = '👍 ' + newCount;
+  // 同步回 recData，防止重新渲染后归零
+  const shopName = el.closest('.rec-item')?.querySelector('.sh')?.textContent;
+  if (shopName) {
+    const entry = recData.find(r => r.shop === shopName);
+    if (entry) entry.votes = newCount;
+  }
+  showToast('投票成功！');
+}
+
+// ══════════════════════════════════════════
+// 粘贴解析
+// ══════════════════════════════════════════
+function parsePasteInput(text) {
+  const hint = document.getElementById('url-hint-text');
+  const nameInput = document.getElementById('rate-shop-input');
+  const urlInput = document.getElementById('rate-url-input');
+  const deliveryEl = document.getElementById('rate-delivery-input');
+  const infoRow = document.getElementById('rate-info-row');
+  const deliveryTag = document.getElementById('rate-delivery-tag');
+  const deliveryLbl = document.getElementById('rate-delivery-label');
+  const linkTag = document.getElementById('rate-link-tag');
+  if (!text.trim()) {
+    hint.style.color=''; hint.textContent='💡 打开淘宝闪购 → 进入店铺 → 右上角分享 → 复制链接 → 整段粘贴进来，自动识别'; return;
+  }
+  let delivery='', shopName='', jumpUrl='';
+  const dm = text.match(/(\d+分钟)送达/); if (dm) delivery = dm[1];
+  const sm = text.match(/\d+分钟送达(.+?)[：:]/); if (sm) shopName = sm[1].trim();
+  else { const fb = text.match(/^([^:：\n\r]{2,30})[：:]/); if (fb) shopName = fb[1].trim(); }
+  const tm = text.match(/[?&]targetUrl=([^&\s\n\r]+)/);
+  if (tm) { try { jumpUrl = decodeURIComponent(tm[1]); } catch(e){ jumpUrl=tm[1]; } }
+  else { const hm = text.match(/https?:\/\/[^\s\n\r]+/); if (hm) jumpUrl = hm[0].replace(/[）)，。\s]+$/,''); }
+  if (shopName) nameInput.value = shopName;
+  if (jumpUrl) urlInput.value = jumpUrl;
+  if (deliveryEl) deliveryEl.value = delivery;
+  if (deliveryTag) { deliveryTag.style.display = delivery?'flex':'none'; if (deliveryLbl) deliveryLbl.textContent = delivery+'送达'; }
+  if (linkTag) linkTag.style.display = jumpUrl?'flex':'none';
+  if (infoRow) infoRow.style.display = (delivery||jumpUrl)?'block':'none';
+  if (shopName && jumpUrl && delivery) { hint.style.color='var(--accent3)'; hint.textContent=`✅ 店铺：${shopName}　⏱ ${delivery}送达　链接已提取！`; }
+  else if (shopName && jumpUrl) { hint.style.color='var(--accent3)'; hint.textContent=`✅ 已识别「${shopName}」，链接已提取！`; }
+  else if (shopName) { hint.style.color='var(--accent2)'; hint.textContent=`🟡 已识别「${shopName}」，未找到链接`; }
+  else { hint.style.color='var(--muted)'; hint.textContent='⚠️ 未能识别，请确认粘贴的是淘宝闪购完整分享内容'; }
+}
+
+// ══════════════════════════════════════════
+// 提交推荐
+// ══════════════════════════════════════════
+let currentStar = 0;
+let selectedDims = new Set();
+
+function setStar(n) {
+  currentStar = n;
+  document.querySelectorAll('#stars .star').forEach((s,i) => s.classList.toggle('lit', i<n));
+}
+function toggleDim(el, dim) {
+  el.classList.toggle('selected');
+  selectedDims.has(dim) ? selectedDims.delete(dim) : selectedDims.add(dim);
+}
+function addRateDish() {
+  const list = document.getElementById('rate-dish-list');
+  const row = document.createElement('div'); row.className='dish-add-row';
+  row.innerHTML=`<input type="text" class="dish-name-input" placeholder="菜品名称"><input type="text" class="price-input" placeholder="¥价格"><button class="remove-btn" onclick="removeRateDish(this)">×</button>`;
+  list.appendChild(row);
+}
+function removeRateDish(btn) {
+  const list = document.getElementById('rate-dish-list');
+  if (list.children.length <= 1) return showToast('至少保留一个菜品');
+  btn.parentElement.remove();
+}
+function submitRateForm() {
+  const shop = document.getElementById('rate-shop-input').value.trim();
+  const reason = document.getElementById('rate-reason-input').value.trim();
+  const shopUrl = document.getElementById('rate-url-input').value.trim();
+  const delivery = document.getElementById('rate-delivery-input')?.value.trim()||'';
+  if (!shop) return showToast('请填写店铺名称 🏪');
+  if (!currentStar) return showToast('请点击星星打分 ⭐');
+  if (SHOPS[shop]) { if (shopUrl) SHOPS[shop].url=shopUrl; }
+  else { SHOPS[shop]={icon:'🍽',meta:delivery?`同事推荐 · ${delivery}送达`:'同事推荐',url:shopUrl,reason:reason||'同事强烈推荐！',keywords:[],dishes:[],tags:[]}; }
+  const rows = document.getElementById('rate-dish-list').querySelectorAll('.dish-add-row');
+  const dishes = [];
+  rows.forEach(r => { const n=r.querySelector('.dish-name-input').value.trim(); const p=r.querySelector('.price-input').value.trim(); if(n) dishes.push({e:'🍽',n,p:p||'？',desc:''}); });
+  const tags = [...selectedDims];
+  const comment = document.getElementById('comment-input').value.trim();
+  // 更新榜单（加权平均）
+  const existing = rankData.find(r => r.name===shop);
+  if (existing) {
+    existing.score = Math.round(((existing.score*existing.count+currentStar)/(existing.count+1))*10)/10;
+    existing.count += 1;
+    existing.meta = `${existing.count}人评分 · ${tags.join(' ')||reason||'同事推荐'}`;
+    if (dishes[0]) existing.dish = dishes.map(d=>d.n).join(' · ');
+  } else {
+    rankData.push({name:shop, dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品', meta:`1人评分 · ${tags.join(' ')||reason||'同事推荐'}`, score:currentStar, count:1});
+  }
+  // 同步到同事推荐
+  recData.unshift({shop, icon:SHOPS[shop]?.icon||'🍽', user:currentUsername||'我', stars:currentStar, reason:reason||'推荐这家！', votes:0, tags, dishes});
+  renderRecList();
+  renderTodayShops();
+  if (shopUrl) { try { const urls=JSON.parse(localStorage.getItem('moho_shop_urls')||'{}'); urls[shop]=shopUrl; localStorage.setItem('moho_shop_urls',JSON.stringify(urls)); } catch(e){} }
+  showToast(`✅ 已提交「${shop}」${currentStar}星推荐！`);
+  clearRateForm();
+}
+function removeCustomTag(el, val) {
+  selectedDims.delete(val);
+  el.parentElement.remove();
+}
+
+function clearRateForm() {
+  currentStar=0; selectedDims.clear();
+  ['rate-shop-input','rate-reason-input','comment-input'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['rate-url-input','rate-delivery-input','custom-tag-input'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  const pasteEl=document.getElementById('rate-paste-input'); if(pasteEl) pasteEl.value='';
+  const infoRow=document.getElementById('rate-info-row'); if(infoRow) infoRow.style.display='none';
+  const hint=document.getElementById('url-hint-text');
+  if(hint){ hint.style.color=''; hint.textContent='💡 打开淘宝闪购 → 进入店铺 → 右上角分享 → 复制链接 → 整段粘贴进来，自动识别'; }
+  document.querySelectorAll('#stars .star').forEach(s => s.classList.remove('lit'));
+  document.querySelectorAll('#score-dimensions .dim-item').forEach(d => d.classList.remove('selected'));
+  const customRow = document.getElementById('custom-tags-row'); if(customRow) customRow.innerHTML='';
+  document.getElementById('rate-dish-list').innerHTML=`<div class="dish-add-row"><input type="text" class="dish-name-input" placeholder="菜品名称"><input type="text" class="price-input" placeholder="¥价格"><button class="remove-btn" onclick="removeRateDish(this)">×</button></div>`;
+}
+
+// 初始渲染榜单
+renderRankList();
+
+// ══════════════════════════════════════════
+// 管理推荐
+// ══════════════════════════════════════════
+function _renderSettingsShops() {
+  const list = document.getElementById('settings-shop-list');
+  const shopNames = Object.keys(SHOPS);
+  if (!shopNames.length) { list.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">还没有推荐店铺，去「填写推荐」添加第一家！</div>'; return; }
+  list.innerHTML = shopNames.map((name,idx) => {
+    const s = SHOPS[name];
+    const dishes = (s.dishes||[]).map(d => `
+      <div class="shop-edit-dish-row">
+        <input type="text" placeholder="菜品名" value="${(d.n||'').replace(/"/g,'&quot;')}" class="dish-n">
+        <input type="text" placeholder="¥价格" value="${(d.p||'').replace(/"/g,'&quot;')}" class="price">
+        <button class="rm" onclick="removeSettingsDish(this)">×</button>
+      </div>`).join('');
+    const rd = rankData.find(r => r.name===name);
+    const curScore = rd ? rd.score : 0;
+    const stars = [1,2,3,4,5].map(n => `<span class="sec-star${curScore>=n?' lit':''}" onclick="setSecStar(this,${idx},${n})" style="font-size:22px;cursor:pointer;opacity:${curScore>=n?1:.3};filter:${curScore>=n?'none':'grayscale(1)'};transition:all .15s">⭐</span>`).join('');
+    const allTags=['😋 味道好','⚡ 送得快','💰 超值','🍱 份量大','📦 包装好','🔁 会回购'];
+    const curTags=new Set(s.tags||[]);
+    const tagBtns=allTags.map(t=>`<div class="sec-tag-btn${curTags.has(t)?' sel':''}" onclick="toggleSecTag(this,'${t}',${idx})">${t}</div>`).join('');
+    return `
+      <div class="shop-edit-card" id="sec-card-${idx}">
+        <div class="shop-edit-header" onclick="toggleShopEdit(${idx})">
+          <span class="shop-edit-icon">${s.icon||'🍽'}</span>
+          <div style="flex:1;min-width:0">
+            <div class="shop-edit-name-display">${name}</div>
+            <div class="shop-edit-meta">${s.meta||''}${s.url?'　🔗 有直达链接':''}</div>
+          </div>
+          <span class="shop-edit-toggle" id="sec-toggle-${idx}">编辑 ▾</span>
+        </div>
+        <div class="shop-edit-body" id="sec-body-${idx}">
+          <div class="shop-edit-label">店铺名称</div>
+          <input class="shop-edit-input" data-field="name" value="${name.replace(/"/g,'&quot;')}">
+          <div class="shop-edit-label">粘贴淘宝闪购分享内容（自动识别）</div>
+          <textarea class="shop-edit-textarea" rows="2" placeholder="淘宝闪购...30分钟送达店铺名：https://..." oninput="parseSettingsPaste(this,${idx})"></textarea>
+          <div class="shop-edit-label" style="margin-top:6px">或直接填写跳转链接</div>
+          <input class="shop-edit-input" data-field="url" value="${(s.url||'').replace(/"/g,'&quot;')}" placeholder="eleme:// 或 https:// 链接">
+          <div class="shop-edit-label">推荐理由</div>
+          <textarea class="shop-edit-textarea" data-field="reason" rows="2">${s.reason||''}</textarea>
+          <div class="shop-edit-label">推荐菜品</div>
+          <div class="shop-edit-dishes" id="sec-dishes-${idx}">${dishes}</div>
+          <button class="add-dish-small" onclick="addSettingsDish(${idx})">＋ 添加菜品</button>
+          <div class="shop-edit-label" style="margin-top:12px">⭐ 综合评分</div>
+          <div class="sec-stars" id="sec-stars-${idx}" data-score="${curScore}">${stars}</div>
+          <div class="shop-edit-label" style="margin-top:10px">🏷 标签</div>
+          <div class="sec-tags" id="sec-tags-${idx}">${tagBtns}</div>
+          <div id="sec-del-confirm-${idx}" style="display:none;margin-top:10px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.3);border-radius:10px;padding:10px 12px;">
+            <div style="font-size:12px;margin-bottom:8px;">确定删除「${name}」？</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn secondary" style="flex:1;font-size:12px;padding:7px" onclick="document.getElementById('sec-del-confirm-${idx}').style.display='none'">取消</button>
+              <button class="btn" style="flex:1;font-size:12px;padding:7px;background:#e53e3e" onclick="confirmDeleteShop(${idx})">确认删除</button>
+            </div>
+          </div>
+          <button class="del-shop-btn" onclick="document.getElementById('sec-del-confirm-${idx}').style.display='block'">🗑 删除这家店铺</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleShopEdit(idx) {
+  const body=document.getElementById('sec-body-'+idx), toggle=document.getElementById('sec-toggle-'+idx);
+  const open=body.classList.toggle('open'); toggle.textContent=open?'收起 ▴':'编辑 ▾';
+}
+function setSecStar(el,idx,n) {
+  const c=document.getElementById('sec-stars-'+idx); c.dataset.score=n;
+  c.querySelectorAll('.sec-star').forEach((s,i)=>{ const lit=i<n; s.classList.toggle('lit',lit); s.style.opacity=lit?'1':'.3'; s.style.filter=lit?'none':'grayscale(1)'; });
+}
+function toggleSecTag(el) { el.classList.toggle('sel'); }
+function addSettingsDish(idx) {
+  const c=document.getElementById('sec-dishes-'+idx), row=document.createElement('div'); row.className='shop-edit-dish-row';
+  row.innerHTML=`<input type="text" placeholder="菜品名" class="dish-n"><input type="text" placeholder="¥价格" class="price"><button class="rm" onclick="removeSettingsDish(this)">×</button>`;
+  c.appendChild(row);
+}
+function removeSettingsDish(btn) { btn.parentElement.remove(); }
+function addNewShopInSettings() {
+  const name='新店铺'+(Object.keys(SHOPS).length+1);
+  SHOPS[name]={icon:'🍽',meta:'同事推荐',url:'',reason:'',keywords:[],dishes:[],tags:[]};
+  _renderSettingsShops();
+  setTimeout(()=>toggleShopEdit(Object.keys(SHOPS).length-1),50);
+}
+function confirmDeleteShop(idx) {
+  const name=Object.keys(SHOPS)[idx]; if(name) delete SHOPS[name];
+  _renderSettingsShops(); showToast('🗑 已删除「'+(name||'')+'」');
+}
+function parseSettingsPaste(textarea,idx) {
+  const text=textarea.value, card=document.getElementById('sec-card-'+idx);
+  if(!card||!text.trim()) return;
+  const ni=card.querySelector('[data-field="name"]'), ui=card.querySelector('[data-field="url"]');
+  const sm=text.match(/\d+分钟送达(.+?)[：:]/); if(sm&&ni) ni.value=sm[1].trim();
+  const tm=text.match(/[?&]targetUrl=([^&\s\n\r]+)/);
+  if(tm&&ui){ try{ui.value=decodeURIComponent(tm[1]);}catch(e){ui.value=tm[1];} }
+  else { const hm=text.match(/https?:\/\/[^\s\n\r]+/); if(hm&&ui) ui.value=hm[0].replace(/[）)，。\s]+$/,''); }
+  if(sm||tm) showToast('✅ 已自动识别店铺信息！');
+}
+function saveAllSettings() {
+  const cards=document.querySelectorAll('.shop-edit-card'), newShops={};
+  cards.forEach((card,idx)=>{
+    const ni=card.querySelector('[data-field="name"]'), ui=card.querySelector('[data-field="url"]'), ri=card.querySelector('[data-field="reason"]');
+    if(!ni) return;
+    const newName=ni.value.trim(), oldName=Object.keys(SHOPS)[idx]||newName, existing=SHOPS[oldName]||{};
+    const dishes=[]; card.querySelectorAll('.shop-edit-dish-row').forEach(r=>{ const n=r.querySelector('.dish-n')?.value.trim(),p=r.querySelector('.price')?.value.trim(); if(n) dishes.push({e:'🍽',n,p:p||'',desc:'',hot:dishes.length===0}); });
+    const starsEl=card.querySelector('.sec-stars'), score=starsEl?parseFloat(starsEl.dataset.score||0):0;
+    const tags=[...card.querySelectorAll('.sec-tag-btn.sel')].map(t=>t.textContent);
+    if(newName){
+      newShops[newName]={...existing,icon:existing.icon||'🍽',meta:existing.meta||'同事推荐',url:ui?.value.trim()||existing.url||'',reason:ri?.value.trim()||existing.reason||'',keywords:existing.keywords||[],dishes:dishes.length?dishes:existing.dishes||[],tags};
+      if(score>0){ const rd=rankData.find(r=>r.name===oldName); if(rd){rd.name=newName;rd.score=score;if(tags.length) rd.meta=`${rd.count}人评分 · ${tags.join(' ')}`;}else{rankData.push({name:newName,dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品',meta:`1人评分 · ${tags.join(' ')||'同事推荐'}`,score,count:1});} }
+    }
+  });
+  Object.keys(SHOPS).forEach(k=>delete SHOPS[k]); Object.assign(SHOPS,newShops);
+  try{ const urls={}; Object.entries(SHOPS).forEach(([k,v])=>{if(v.url)urls[k]=v.url;}); localStorage.setItem('moho_shop_urls',JSON.stringify(urls)); }catch(e){}
+  renderTodayShops();
+  renderRecList();
+  showToast('✅ 已保存所有修改！');
+}
+function saveSettingsName() { showToast('请点击顶部昵称来修改 😊'); }
+</script>
+</body>
+</html>
