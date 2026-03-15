@@ -586,6 +586,16 @@ function _initFirebase() {
       const arr = Array.isArray(val) ? val : Object.values(val);
       arr.forEach(r => r && recData.push(r));
     }
+    // 用 recData 补全 SHOPS 的菜品和标签（修复历史数据）
+    recData.forEach(r => {
+      if (!r.shop || !SHOPS[r.shop]) return;
+      if (r.dishes && r.dishes.length && !SHOPS[r.shop].dishes?.length) {
+        SHOPS[r.shop].dishes = r.dishes;
+      }
+      if (r.tags && r.tags.length && !SHOPS[r.shop].tags?.length) {
+        SHOPS[r.shop].tags = r.tags;
+      }
+    });
     renderRecList();
     renderTodayShops();
   });
@@ -611,6 +621,16 @@ function _initFirebase() {
     if (val && typeof val === 'object') {
       Object.entries(val).forEach(([k, v]) => { if (v && k) SHOPS[k] = v; });
     }
+    // 用 recData 里的菜品/标签补全 SHOPS（修复历史数据）
+    recData.forEach(r => {
+      if (!r.shop || !SHOPS[r.shop]) return;
+      if (r.dishes && r.dishes.length && !SHOPS[r.shop].dishes?.length) {
+        SHOPS[r.shop].dishes = r.dishes;
+      }
+      if (r.tags && r.tags.length && !SHOPS[r.shop].tags?.length) {
+        SHOPS[r.shop].tags = r.tags;
+      }
+    });
     renderTodayShops();
     if (document.getElementById('wview-shops')?.style.display !== 'none') _renderSettingsShops();
   });
@@ -1351,9 +1371,10 @@ function submitRateForm() {
     if (shopUrl) { SHOPS[shop].url = shopUrl; }
     if (dishes.length) { SHOPS[shop].dishes = dishes; }
     if (reason) { SHOPS[shop].reason = reason; }
+    if (tags.length) { SHOPS[shop].tags = tags; }
     _fbSaveShops();
   } else {
-    SHOPS[shop] = {icon:'🍽', meta:delivery?`同事推荐 · ${delivery}送达`:'同事推荐', url:shopUrl, reason:reason||'同事强烈推荐！', keywords:[], dishes, tags:[]};
+    SHOPS[shop] = {icon:'🍽', meta:delivery?`同事推荐 · ${delivery}送达`:'同事推荐', url:shopUrl, reason:reason||'同事强烈推荐！', keywords:[], dishes, tags};
     _fbSaveShops();
   }
   const rows = document.getElementById('rate-dish-list').querySelectorAll('.dish-add-row');
