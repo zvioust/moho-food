@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>MOHO深夜食堂 🍱</title>
+
+<!-- 微信/社交分享卡片 -->
+<meta property="og:title" content="MOHO深夜食堂 🍱">
+<meta property="og:description" content="加班吃什么？同事推荐，一键点餐，轻松解决深夜觅食难题！">
+<meta property="og:image" content="https://mohofood.cn/cover.png">
+<meta property="og:url" content="https://mohofood.cn">
+<meta property="og:type" content="website">
+<meta name="description" content="加班吃什么？同事推荐，一键点餐，轻松解决深夜觅食难题！">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <!-- Firebase -->
@@ -757,7 +765,8 @@ function _initFirebase() {
       if (iconUpdated) setTimeout(() => _fbSaveShops(), 100);
     }
     renderTodayShops();
-    if (document.getElementById('wview-shops')?.style.display !== 'none') _renderSettingsShops();
+    const wviewShops = document.getElementById('wview-shops');
+    if (wviewShops && wviewShops.offsetParent !== null) _renderSettingsShops();
   });
 }
 
@@ -869,31 +878,6 @@ function switchTab(tab) {
   if (tab === 'write') switchWriteTab('form');
 }
 
-function renderUsersList() {
-  const list = document.getElementById('users-list');
-  if (!list) return;
-  const users = Object.values(userActivity);
-  if (!users.length) {
-    list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);font-size:12px">暂无伙伴数据，大家先来登录吧！</div>';
-    return;
-  }
-  const sorted = users.sort((a,b) => (b.recCount||0)-(a.recCount||0));
-  list.innerHTML = sorted.map(u => {
-    const name = u.name||'未知';
-    const myRecs = recData.filter(r => r.user===name && (r.stars||r.reason)).length;
-    const myComments = Object.values(commentsData).flat().filter(c=>c.user===name).length;
-    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;">
-      <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;flex-shrink:0">${name[0]||'?'}</div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:700">${name}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.8">
-          🕐 最后登录：${u.lastSeen||'未知'}<br>
-          ✍️ 推荐 ${myRecs} 条 &nbsp;·&nbsp; 💬 评论 ${myComments} 条
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
 function switchWriteTab(view) {
   ['form','shops'].forEach(v => {
     document.getElementById('wview-'+v).style.display = v===view ? 'block' : 'none';
@@ -1216,7 +1200,9 @@ function renderRecList() {
         ${_renderTags(e.tags)}
       </div>`).join('');
     const validStars = s.entries.filter(e => e.stars > 0);
-    const avg = validStars.length ? (validStars.reduce((a,b)=>a+b.stars,0)/validStars.length).toFixed(1) : '';
+    // 优先用榜单评分，没有才用推荐人平均分
+    const rd = rankData.find(r => r.name === s.shop);
+    const avg = rd ? rd.score.toFixed(1) : (validStars.length ? (validStars.reduce((a,b)=>a+b.stars,0)/validStars.length).toFixed(1) : '');
     const allTags = [...new Set(s.entries.flatMap(e=>e.tags||[]))];
     const avatarContent = `<span style="font-size:19px">${s.icon||'🍽'}</span>`;
     return `
@@ -2195,8 +2181,14 @@ function _renderSettingsShops() {
         <button class="rm" onclick="removeSettingsDish(this)">×</button>
       </div>`).join('');
     const rd = rankData.find(r => r.name===name);
-    const curScore = rd ? rd.score : 0;
+    // 我的评分（localStorage 里存的）
+    const myScore = _getMyRating(name) || 0;
+    // 展示我的评分，没评过则展示综合评分
+    const curScore = myScore || (rd ? rd.score : 0);
     const stars = [1,2,3,4,5].map(n => `<span class="sec-star${curScore>=n?' lit':''}" onclick="setSecStar(this,${idx},${n})" style="font-size:22px;cursor:pointer;opacity:${curScore>=n?1:.3};filter:${curScore>=n?'none':'grayscale(1)'};transition:all .15s">⭐</span>`).join('');
+    const scoreLabel = myScore > 0
+      ? `<span style="color:var(--accent2);font-weight:400">（我的评分 ${myScore} 分，可修改）</span>`
+      : (rd ? `<span style="color:var(--muted);font-weight:400">（综合 ${rd.score.toFixed(1)} 分，点星星添加我的评分）</span>` : '');
     const allTags=['😋 味道好','⚡ 送得快','💰 超值','🍱 份量大','📦 包装好','🔁 会回购'];
     const curTags=new Set(s.tags||[]);
     const tagBtns=allTags.map(t=>`<div class="sec-tag-btn${curTags.has(t)?' sel':''}" onclick="toggleSecTag(this,'${t}',${idx})">${t}</div>`).join('');
@@ -2222,7 +2214,7 @@ function _renderSettingsShops() {
           <div class="shop-edit-label">推荐菜品</div>
           <div class="shop-edit-dishes" id="sec-dishes-${idx}">${dishes}</div>
           <button class="add-dish-small" onclick="addSettingsDish(${idx})">＋ 添加菜品</button>
-          <div class="shop-edit-label" style="margin-top:12px">⭐ 综合评分 ${curScore>0?`<span style="color:var(--accent2);font-weight:400">（当前 ${curScore.toFixed(1)} 分，保存后更新）</span>`:''}</div>
+          <div class="shop-edit-label" style="margin-top:12px">⭐ 我的评分 ${scoreLabel}</div>
           <div class="sec-stars" id="sec-stars-${idx}" data-score="${curScore}">${stars}</div>
           <div class="shop-edit-label" style="margin-top:10px">🏷 标签</div>
           <div class="sec-tags" id="sec-tags-${idx}">${tagBtns}</div>
@@ -2269,19 +2261,35 @@ function addNewShopInSettings() {
   if (newIdx !== -1) setTimeout(() => toggleShopEdit(newIdx), 50);
 }
 function confirmDeleteShop(idx) {
-  // 从卡片的 data-shop 属性获取店铺名，避免索引错位
   const card = document.getElementById('sec-card-' + idx);
   const name = card?.dataset.shop;
   if (!name) return;
-  delete SHOPS[name];
-  const rdIdx = rankData.findIndex(r => r.name === name);
-  if (rdIdx !== -1) { rankData.splice(rdIdx, 1); _fbSaveRank(); }
+
+  // 只删除当前用户对该店铺的 recData 记录
   const recBefore = recData.length;
-  for (let i = recData.length - 1; i >= 0; i--) { if (recData[i].shop === name) recData.splice(i, 1); }
+  for (let i = recData.length - 1; i >= 0; i--) {
+    if (recData[i].shop === name && recData[i].user === currentUsername) recData.splice(i, 1);
+  }
   if (recData.length !== recBefore) _fbSaveRec();
-  _fbSaveShops();
+
+  // 清除 localStorage 里的评分记录
+  try {
+    const key = 'moho_recrated_' + currentUsername;
+    const rated = JSON.parse(localStorage.getItem(key)||'{}');
+    if (rated[name]) { delete rated[name]; localStorage.setItem(key, JSON.stringify(rated)); }
+  } catch(e) {}
+
+  // 检查是否还有其他人的推荐记录
+  const othersStillHave = recData.some(r => r.shop === name && r.user !== currentUsername);
+  if (!othersStillHave) {
+    delete SHOPS[name];
+    const rdIdx = rankData.findIndex(r => r.name === name);
+    if (rdIdx !== -1) { rankData.splice(rdIdx, 1); _fbSaveRank(); }
+    _fbSaveShops();
+  }
+
   _renderSettingsShops();
-  showToast('🗑 已删除「' + name + '」');
+  showToast(othersStillHave ? '🗑 已移除你的推荐，其他人的记录保留' : '🗑 已删除「' + name + '」');
 }
 function parseSettingsPaste(textarea,idx) {
   const text=textarea.value, card=document.getElementById('sec-card-'+idx);
@@ -2322,27 +2330,34 @@ function saveAllSettings() {
         recData.forEach(r => { if(r.shop === oldName) r.shop = newName; });
         _fbSaveRec();
       }
-      // 保存评分：score > 0 才更新，让用户能通过管理推荐修改评分
+      // 保存评分：score > 0 才更新
       if(score > 0) {
+        const oldMyScore = _getMyRating(oldName) || 0;
         const rd = rankData.find(r=>r.name===oldName);
         if(rd) {
           rd.name = newName;
-          rd.score = score;
+          // 把旧的我的评分从加权中去掉，再加入新评分
+          if(oldMyScore > 0 && rd.count > 1) {
+            rd.score = Math.round(((rd.score * rd.count - oldMyScore + score) / rd.count) * 10) / 10;
+          } else if(oldMyScore > 0 && rd.count === 1) {
+            rd.score = score;
+          } else {
+            // 首次评分，加入加权
+            rd.score = Math.round(((rd.score * rd.count + score) / (rd.count + 1)) * 10) / 10;
+            rd.count += 1;
+          }
           rd.meta = `${rd.count}人评分${tags.length?' · '+tags.join(' '):''}`;
         } else {
           rankData.push({name:newName, dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品', meta:`1人评分${tags.length?' · '+tags.join(' '):''}`, score, count:1, likes:0});
         }
         _fbSaveRank();
-        // 同步更新本人的评分记录（管理推荐里修改了评分）
+        // 同步更新本人的 localStorage 评分记录
         if(currentUsername) {
           const key = 'moho_recrated_' + currentUsername;
           try {
             const rated = JSON.parse(localStorage.getItem(key)||'{}');
-            if(newName !== oldName && rated[oldName]) {
-              rated[newName] = score; delete rated[oldName];
-            } else {
-              rated[newName] = score;
-            }
+            if(newName !== oldName && rated[oldName]) { rated[newName] = score; delete rated[oldName]; }
+            else { rated[newName] = score; }
             localStorage.setItem(key, JSON.stringify(rated));
           } catch(e) {}
         }
