@@ -13,7 +13,7 @@
 <meta property="og:type" content="website">
 <meta name="description" content="加班吃什么？同事推荐，一键点餐，轻松解决深夜觅食难题！">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -40,7 +40,7 @@ body.day-mode {
 }
 body.day-mode body::before { display:none; }
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Noto Serif SC',serif;min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%;}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background-image:
     radial-gradient(1px 1px at 15% 20%,rgba(255,255,255,.5) 0%,transparent 100%),
@@ -332,8 +332,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .modal h3{font-size:17px;margin-bottom:6px;}
 
 /* ── Toast ── */
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-60px);background:var(--accent3);color:#0f0e17;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:normal;max-width:88vw;text-align:center;line-height:1.5;}
-.toast.show{transform:translateX(-50%) translateY(0);}
+.toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,30,30,0.95);color:#fff;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:9999;transition:opacity .3s ease, transform .3s ease;white-space:normal;max-width:88vw;text-align:center;line-height:1.5;opacity:0;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 
 /* ── 评分弹窗 ── */
 .rec-action-row{display:flex;gap:8px;padding:10px 14px 0;border-top:1px solid var(--border);}
@@ -859,10 +859,13 @@ updateClock(); setInterval(updateClock, 30000);
 // ══════════════════════════════════════════
 // Toast
 // ══════════════════════════════════════════
+let _toastTimer = null;
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2400);
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
 // ══════════════════════════════════════════
