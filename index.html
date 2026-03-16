@@ -710,6 +710,8 @@ function _initFirebase() {
     }
     renderRecList();
     renderTodayShops();
+    // 推荐数可能变化，刷新用户统计
+    if (currentUsername) setTimeout(_refreshMyActivity, 300);
   });
 
   // 监听 rankData
@@ -962,19 +964,74 @@ function expandShopCard(name) {
 }
 
 // ══════════════════════════════════════════
-// 查找 — 修正：整体关键词匹配
+// 查找 — 语义扩展关键词匹配
 // ══════════════════════════════════════════
+
+// 语义扩展词典：搜索词 → 可匹配的相关词
+const _searchSynonyms = {
+  '寿司': ['刺身','日料','日式','海胆','玉子','天妇罗','手卷','鱼生','生鱼'],
+  '刺身': ['寿司','日料','日式','生鱼','鱼生','海鲜'],
+  '日料': ['寿司','刺身','日式','拉面','乌冬','天妇罗','海胆','玉子烧'],
+  '火锅': ['涮肉','涮锅','毛肚','鸳鸯','麻辣烫','串串','冒菜'],
+  '涮肉': ['火锅','涮锅','羊肉'],
+  '麻辣': ['川菜','湘菜','辣','火锅','冒菜','麻辣烫','串串'],
+  '辣': ['麻辣','川菜','湘菜','辣椒','泡椒','酸辣'],
+  '川菜': ['麻辣','辣','四川','酸辣','泡椒','冒菜'],
+  '烤肉': ['烧烤','烤串','串串','炭烤','碳烤'],
+  '烧烤': ['烤肉','烤串','串串','炭烤'],
+  '串串': ['烤串','烧烤','麻辣','火锅'],
+  '炸鸡': ['鸡排','鸡腿','鸡翅','炸物','汉堡'],
+  '鸡排': ['炸鸡','鸡腿','鸡翅'],
+  '汉堡': ['炸鸡','快餐','三明治'],
+  '饺子': ['水饺','蒸饺','煎饺','锅贴','馄饨','汤包','小笼包'],
+  '包子': ['馒头','小笼','汤包','蒸饺'],
+  '馄饨': ['饺子','云吞','抄手','面'],
+  '面': ['拉面','刀削面','炸酱面','米线','螺蛳粉','馄饨','乌冬'],
+  '拉面': ['面','日式拉面','乌冬','米线'],
+  '粉': ['米线','螺蛳粉','河粉','米粉','过桥米线'],
+  '米线': ['粉','螺蛳粉','过桥米线','面'],
+  '螺蛳粉': ['粉','米线','面'],
+  '鱼': ['酸菜鱼','水煮鱼','烤鱼','鱼片','海鲜','刺身'],
+  '海鲜': ['鱼','虾','蟹','刺身','日料','龙虾'],
+  '虾': ['龙虾','小龙虾','虾仁','海鲜','皮皮虾'],
+  '牛肉': ['牛排','烤肉','涮肉','火锅','牛腩'],
+  '牛排': ['牛肉','西餐','烤肉'],
+  '猪肉': ['排骨','猪脚','叉烧','烧腊'],
+  '羊肉': ['烤肉','涮肉','串串','烧烤'],
+  '沙拉': ['轻食','健康','素食','蔬菜'],
+  '轻食': ['沙拉','健康','素食'],
+  '素食': ['沙拉','轻食','蔬菜'],
+  '粥': ['煲仔饭','汤','暖胃','早餐'],
+  '煲仔饭': ['粥','汤','砂锅'],
+  '咖喱': ['印度','泰国','东南亚'],
+  '奶茶': ['茶饮','饮品','咖啡','甜品'],
+  '甜品': ['蛋糕','奶茶','糕点','烘焙'],
+  '快餐': ['汉堡','炸鸡','炸物'],
+};
+
+function _expandQuery(q) {
+  const expanded = new Set([q]);
+  // 直接扩展
+  if (_searchSynonyms[q]) _searchSynonyms[q].forEach(w => expanded.add(w));
+  // 反向扩展：如果 q 是某个词的同义词，把那个词也加进来
+  Object.entries(_searchSynonyms).forEach(([key, syns]) => {
+    if (syns.some(s => s === q || q.includes(s) || s.includes(q))) expanded.add(key);
+  });
+  return [...expanded];
+}
+
 function _matchShop(shopName, s, q) {
-  const targets = [shopName, ...(s.keywords||[]), ...(s.dishes||[]).map(d => d.n)];
-  return targets.some(t => t && (t.includes(q) || q.includes(t)));
+  const targets = [shopName, ...(s.keywords||[]), ...(s.tags||[]), ...(s.dishes||[]).map(d => d.n), s.reason||''];
+  const queries = _expandQuery(q);
+  return queries.some(qw =>
+    targets.some(t => t && (t.includes(qw) || qw.includes(t)))
+  );
 }
 
 function doSearch() {
   const val = document.getElementById('rec-input').value.trim();
   if (!val) return showToast('请输入想吃的内容 😋');
   const matched = Object.entries(SHOPS).filter(([name, s]) => _matchShop(name, s, val));
-  // 隐藏今日好店，显示查找结果
-  document.getElementById('today-shops-section').style.display = 'none';
   document.getElementById('shop-expand-panel').style.display = 'none';
   if (!matched.length) {
     document.getElementById('quick-suggest').style.display = 'none';
@@ -988,7 +1045,6 @@ function doSearch() {
 function resetSearch() {
   document.getElementById('rec-input').value = '';
   document.getElementById('quick-suggest').style.display = 'none';
-  document.getElementById('today-shops-section').style.display = 'block';
 }
 
 // 自定义标签
@@ -1162,9 +1218,7 @@ function renderRecList() {
     const validStars = s.entries.filter(e => e.stars > 0);
     const avg = validStars.length ? (validStars.reduce((a,b)=>a+b.stars,0)/validStars.length).toFixed(1) : '';
     const allTags = [...new Set(s.entries.flatMap(e=>e.tags||[]))];
-    const avatarContent = s.entries.length > 1
-      ? `<span style="font-size:13px;font-weight:700;color:#fff">${s.entries.length}人</span>`
-      : `<span style="font-size:19px">${s.icon||'🍽'}</span>`;
+    const avatarContent = `<span style="font-size:19px">${s.icon||'🍽'}</span>`;
     return `
       <div class="rec-item">
         <div class="rec-item-top" onclick="toggleRecDishes(this)">
@@ -1709,6 +1763,7 @@ function _watchComments() {
     Object.keys(commentsData).forEach(k => delete commentsData[k]);
     Object.assign(commentsData, val);
     renderRecList();
+    if (currentUsername) setTimeout(_refreshMyActivity, 300);
   });
 }
 
@@ -1817,23 +1872,47 @@ function _recordUserActivity() {
   const today = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
   const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   const safeKey = currentUsername.replace(/[.#$/\[\]]/g, '_');
-  // 检查今日是否已登录过
   const loginFlag = 'moho_login_' + safeKey + '_' + today;
   const alreadyLoggedToday = localStorage.getItem(loginFlag);
   let unsub = null, done = false;
   unsub = window._fbOnValue('users/' + safeKey, snap => {
     if (done) return; done = true;
     const cur = snap.val() || {};
+    const recCount = recData.filter(r => r.user === currentUsername && (r.stars||r.reason)).length;
+    const commentCount = Object.values(commentsData).flat().filter(c => c.user === currentUsername).length;
     window._fbSet('users/' + safeKey, {
       name: currentUsername,
       lastSeen: timeStr,
       loginCount: alreadyLoggedToday ? (cur.loginCount||0) : (cur.loginCount||0) + 1,
-      recCount: recData.filter(r => r.user === currentUsername && (r.stars||r.reason)).length,
-      commentCount: Object.values(commentsData).flat().filter(c => c.user === currentUsername).length
+      recCount,
+      commentCount
     });
     if (!alreadyLoggedToday) localStorage.setItem(loginFlag, '1');
     setTimeout(() => { if (typeof unsub === 'function') unsub(); }, 0);
   });
+}
+
+// 数据加载完成后刷新用户统计（推荐数/评论数可能变化）
+let _refreshTimer = null;
+function _refreshMyActivity() {
+  if (!currentUsername || !window._fbSet || !window._fbOnValue) return;
+  // 防抖：500ms内多次调用只执行最后一次
+  clearTimeout(_refreshTimer);
+  _refreshTimer = setTimeout(() => {
+    const safeKey = currentUsername.replace(/[.#$/\[\]]/g, '_');
+    const recCount = recData.filter(r => r.user === currentUsername && (r.stars||r.reason)).length;
+    const commentCount = Object.values(commentsData).flat().filter(c => c.user === currentUsername).length;
+    let unsub2 = null, done2 = false;
+    unsub2 = window._fbOnValue('users/' + safeKey, snap => {
+      if (done2) return; done2 = true;
+      const cur = snap.val() || {};
+      // 只在数值真的变化时才写入，避免无谓触发
+      if ((cur.recCount||0) !== recCount || (cur.commentCount||0) !== commentCount) {
+        window._fbSet('users/' + safeKey, {...cur, name: currentUsername, recCount, commentCount});
+      }
+      setTimeout(() => { if (typeof unsub2==='function') unsub2(); }, 0);
+    });
+  }, 500);
 }
 
 function _watchUsers() {
