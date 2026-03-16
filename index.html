@@ -20,11 +20,17 @@ window._fbOnValue = (path, cb) => onValue(ref(db, path), cb);
 setTimeout(() => document.dispatchEvent(new Event('firebaseReady')), 0);
 </script>
 <style>
+/* ── 日间主题 ── */
 :root {
   --bg:#0a0a0a; --surface:#111111; --card:#1a1a1a; --border:#2a2a2a;
   --accent:#ff6b35; --accent2:#ffd166; --accent3:#06d6a0;
   --text:#f5f5f5; --muted:#888888; --glow:rgba(255,107,53,0.25);
 }
+body.day-mode {
+  --bg:#f5f0ea; --surface:#ede8e0; --card:#ffffff; --border:#ddd8d0;
+  --text:#1a1a1a; --muted:#888888; --glow:rgba(255,107,53,0.15);
+}
+body.day-mode body::before { display:none; }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Noto Serif SC',serif;min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%;}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -320,6 +326,61 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 /* ── Toast ── */
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-60px);background:var(--accent3);color:#0f0e17;padding:10px 20px;border-radius:30px;font-size:13px;font-weight:600;z-index:999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:normal;max-width:88vw;text-align:center;line-height:1.5;}
 .toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── 评分弹窗 ── */
+.rec-action-row{display:flex;gap:8px;padding:10px 14px 0;border-top:1px solid var(--border);}
+.rec-rate-btn{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px;font-size:12px;font-family:inherit;color:var(--muted);cursor:pointer;transition:all .2s;text-align:center;}
+.rec-rate-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+.rec-rate-btn.rated{background:rgba(255,209,102,.1);border-color:var(--accent2);color:var(--accent2);}
+
+/* ── 评论区 ── */
+.comments-section{padding:10px 14px 14px;border-top:1px solid var(--border);}
+.comments-title{font-size:10px;color:var(--accent2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.comment-item{display:flex;gap:8px;margin-bottom:8px;align-items:flex-start;}
+.comment-avatar{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.comment-body{flex:1;background:var(--bg);border-radius:10px;padding:7px 10px;}
+.comment-user{font-size:11px;font-weight:700;color:var(--accent3);}
+.comment-text{font-size:12px;color:var(--text);margin-top:2px;line-height:1.5;}
+.comment-time{font-size:10px;color:var(--muted);margin-top:2px;}
+.comment-input-row{display:flex;gap:8px;margin-top:8px;}
+.comment-input-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:12px;font-family:inherit;outline:none;}
+.comment-input-row input:focus{border-color:var(--accent3);}
+.comment-send-btn{background:var(--accent3);color:#0f0e17;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-family:inherit;font-weight:600;cursor:pointer;}
+
+/* ── 管理员页面 ── */
+#admin-screen{position:fixed;inset:0;background:var(--bg);z-index:600;display:none;flex-direction:column;}
+#admin-screen.show{display:flex;}
+.admin-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface);}
+.admin-title{font-size:16px;font-weight:700;font-family:'Space Mono',monospace;}
+.admin-close{font-size:22px;cursor:pointer;color:var(--muted);}
+.admin-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.admin-tabs::-webkit-scrollbar{display:none;}
+.admin-tab{flex-shrink:0;padding:10px 14px;text-align:center;font-size:12px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;}
+.admin-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.admin-body{flex:1;overflow-y:auto;padding:16px;}
+.admin-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+.admin-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.admin-card-name{font-size:13px;font-weight:700;}
+.admin-del-btn{background:none;border:1px solid rgba(255,80,80,.4);color:rgba(255,100,100,.8);border-radius:6px;padding:3px 10px;font-size:11px;font-family:inherit;cursor:pointer;}
+.admin-del-btn:hover{background:rgba(255,80,80,.1);}
+.admin-meta{font-size:11px;color:var(--muted);line-height:1.7;}
+.admin-edit-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;margin-top:6px;}
+.admin-edit-input:focus{border-color:var(--accent);}
+.admin-save-btn{margin-top:6px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:5px 14px;font-size:12px;font-family:inherit;cursor:pointer;}
+.admin-stars-row{display:flex;align-items:center;gap:4px;margin-top:4px;}
+.admin-star{font-size:22px;cursor:pointer;transition:transform .1s;}.admin-star:hover{transform:scale(1.2);}
+.admin-user-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+.admin-user-name{font-size:14px;font-weight:700;color:var(--accent3);margin-bottom:8px;}
+.admin-user-stat{font-size:12px;color:var(--muted);line-height:2;}
+.admin-edit-input{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;width:100%;margin-top:6px;}
+.admin-edit-input:focus{border-color:var(--accent);}
+.admin-save-btn{background:var(--accent3);color:#0f0e17;border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-family:inherit;font-weight:600;cursor:pointer;margin-top:6px;}
+.admin-user-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+.admin-user-name{font-size:13px;font-weight:700;color:var(--accent3);margin-bottom:4px;}
+.admin-user-stat{font-size:11px;color:var(--muted);line-height:1.8;}
+.admin-stars-row{display:flex;gap:6px;margin-top:6px;align-items:center;}
+.admin-star{font-size:20px;cursor:pointer;opacity:.3;filter:grayscale(1);transition:all .15s;}
+.admin-star.lit{opacity:1;filter:none;}
 </style>
 </head>
 <body>
@@ -395,7 +456,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <!-- Header -->
   <div class="header">
     <div class="time-badge"><span class="dot-live"></span><span id="clock">22:47</span> · 今晚加班</div>
-    <h1><span class="brand">MOHO</span> <span class="hl">深夜食堂</span> 🍱</h1>
+    <h1 id="main-logo" onclick="_adminTap()" style="cursor:default;user-select:none"><span class="brand">MOHO</span> <span class="hl">深夜食堂</span> 🍱</h1>
     <p>加班吃什么 轻松点餐</p>
     <div class="user-badge" onclick="openRenameModal()">👤 <span id="header-username">…</span></div>
   </div>
@@ -404,7 +465,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="tabs">
     <div class="tab active" onclick="switchTab('rec')">🙋 求推荐</div>
     <div class="tab" onclick="switchTab('rate')">🏆 榜单</div>
-    <div class="tab" onclick="switchTab('write')">✍️ 我要推荐</div>
+    <div class="tab" onclick="switchTab('write')">✍️ 推荐</div>
   </div>
 
   <!-- ══ 求推荐 ══ -->
@@ -422,11 +483,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
     </div>
 
-    <!-- 今日好店（动态渲染） -->
-    <div id="today-shops-section">
-      <div class="section-title">🏪 今日好店</div>
-      <div class="shop-browse-scroll" id="shop-browse-scroll"></div>
-    </div><!-- end today-shops-section -->
+    <!-- 今日好店已融入同事推荐，此处不再单独展示 -->
 
     <!-- 展开店铺详情 -->
     <div id="shop-expand-panel" style="display:none"><div id="shop-expand-content"></div></div>
@@ -442,6 +499,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
     <div class="section-title">👥 同事推荐</div>
     <div class="rec-list" id="rec-list"></div>
+    <!-- 隐藏的 shop-browse-scroll 供内部函数调用不报错 -->
+    <div id="shop-browse-scroll" style="display:none"></div>
     <button class="btn secondary" style="width:100%;margin-top:4px" onclick="goToWriteReview()">✍️ 我也来推荐一家</button>
   </div>
 
@@ -564,10 +623,23 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <div class="bottom-nav">
   <div class="nav-item active" id="nav-rec" onclick="switchTab('rec')"><span class="icon">🙋</span><span class="label">求推荐</span></div>
   <div class="nav-item" id="nav-rate" onclick="switchTab('rate')"><span class="icon">🏆</span><span class="label">榜单</span></div>
-  <div class="nav-item" id="nav-write" onclick="switchTab('write')"><span class="icon">✍️</span><span class="label">我要推荐</span></div>
+  <div class="nav-item" id="nav-write" onclick="switchTab('write')"><span class="icon">✍️</span><span class="label">推荐</span></div>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- 管理员面板 -->
+<div id="admin-screen">
+  <div class="admin-header">
+    <div class="admin-title">🔑 MOHO 管理后台</div>
+    <span class="admin-close" onclick="closeAdmin()">✕</span>
+  </div>
+  <div class="admin-tabs">
+    <div class="admin-tab active" id="atab-shops" onclick="switchAdminTab('shops')">🏪 店铺</div>
+    <div class="admin-tab" id="atab-users" onclick="switchAdminTab('users')">👤 用户</div>
+  </div>
+  <div class="admin-body" id="admin-body"></div>
+</div>
 
 <script>
 // ══════════════════════════════════════════
@@ -625,8 +697,8 @@ function _initFirebase() {
         SHOPS[r.shop].tags = r.tags;
       }
     });
-    // 自动补全图标（只执行一次）
-    if (!_iconFixDone) {
+    // 自动补全图标：每次 recData 更新后（dishes 可能刚补全），重新跑一遍
+    {
       let iconUpdated = false;
       Object.entries(SHOPS).forEach(([name, s]) => {
         if (!s.icon || s.icon === '🍽') {
@@ -634,7 +706,7 @@ function _initFirebase() {
           if (newIcon !== '🍽') { s.icon = newIcon; iconUpdated = true; }
         }
       });
-      if (iconUpdated) { _iconFixDone = true; _fbSaveShops(); }
+      if (iconUpdated && !_iconFixDone) { _iconFixDone = true; setTimeout(() => _fbSaveShops(), 200); }
     }
     renderRecList();
     renderTodayShops();
@@ -669,7 +741,7 @@ function _initFirebase() {
         SHOPS[r.shop].tags = r.tags;
       }
     });
-    // 自动补全图标（只执行一次）
+    // 自动补全图标（避免无限循环：用 setTimeout 防止循环触发）
     if (!_iconFixDone) {
       let iconUpdated = false;
       Object.entries(SHOPS).forEach(([name, s]) => {
@@ -678,7 +750,9 @@ function _initFirebase() {
           if (newIcon !== '🍽') { s.icon = newIcon; iconUpdated = true; }
         }
       });
-      if (iconUpdated) { _iconFixDone = true; _fbSaveShops(); }
+      const allDone = Object.values(SHOPS).every(s => s.icon && s.icon !== '🍽');
+      if (allDone) _iconFixDone = true;
+      if (iconUpdated) setTimeout(() => _fbSaveShops(), 100);
     }
     renderTodayShops();
     if (document.getElementById('wview-shops')?.style.display !== 'none') _renderSettingsShops();
@@ -689,6 +763,10 @@ function _initFirebase() {
 document.addEventListener('firebaseReady', () => {
   _initFirebase();
   _watchTodayVotes();
+  _watchComments();
+  _watchUsers();
+  // 已自动登录的用户也记录活动
+  if (currentUsername) setTimeout(_recordUserActivity, 500);
 });
 
 // ══════════════════════════════════════════
@@ -722,6 +800,7 @@ function doLogin() {
   _applyUsername(val);
   try { localStorage.setItem('moho_username', val); } catch(e) {}
   _hideLoginScreen();
+  setTimeout(_recordUserActivity, 1000); // 延迟等 Firebase 就绪
 }
 
 // ══════════════════════════════════════════
@@ -744,6 +823,17 @@ function confirmRename() {
   document.getElementById('rename-overlay').classList.remove('show');
   showToast('✅ 昵称已更新为「' + v + '」');
 }
+
+// ══════════════════════════════════════════
+// 日夜主题切换（18:00-06:00 暗色，其余亮色）
+// ══════════════════════════════════════════
+function _applyTheme() {
+  const h = new Date().getHours();
+  const isNight = h >= 18 || h < 6;
+  document.body.classList.toggle('day-mode', !isNight);
+}
+_applyTheme();
+setInterval(_applyTheme, 60000); // 每分钟检查一次
 
 // ══════════════════════════════════════════
 // 时钟
@@ -775,6 +865,32 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-item').forEach((n,i) => n.classList.toggle('active', tabs[i]===tab));
   if (tab === 'rate') renderRankList();
   if (tab === 'write') switchWriteTab('form');
+}
+
+function renderUsersList() {
+  const list = document.getElementById('users-list');
+  if (!list) return;
+  const users = Object.values(userActivity);
+  if (!users.length) {
+    list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted);font-size:12px">暂无伙伴数据，大家先来登录吧！</div>';
+    return;
+  }
+  const sorted = users.sort((a,b) => (b.recCount||0)-(a.recCount||0));
+  list.innerHTML = sorted.map(u => {
+    const name = u.name||'未知';
+    const myRecs = recData.filter(r => r.user===name && (r.stars||r.reason)).length;
+    const myComments = Object.values(commentsData).flat().filter(c=>c.user===name).length;
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+      <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;flex-shrink:0">${name[0]||'?'}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700">${name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.8">
+          🕐 最后登录：${u.lastSeen||'未知'}<br>
+          ✍️ 推荐 ${myRecs} 条 &nbsp;·&nbsp; 💬 评论 ${myComments} 条
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 function switchWriteTab(view) {
   ['form','shops'].forEach(v => {
@@ -937,11 +1053,10 @@ function onRecInput(val) {
 // 随机
 // ══════════════════════════════════════════
 function randomShop() {
-  // 只从榜单里有的店铺中随机（和今日好店保持一致）
   const ranked = rankData.map(r => r.name).filter(n => SHOPS[n]);
   const pool = ranked.length ? ranked : Object.keys(SHOPS);
+  if (!pool.length) return showToast('还没有推荐店铺，快去添加吧！');
   const name = pool[Math.floor(Math.random() * pool.length)];
-  document.getElementById('today-shops-section').style.display = 'block';
   document.getElementById('quick-suggest').style.display = 'none';
   document.getElementById('rec-input').value = '';
   expandedShop = '';
@@ -1001,7 +1116,9 @@ function renderRecList() {
     // 跳过占位记录（新增店铺时写入的空条目）
     if (!r.stars && !r.reason) return;
     if (!shopMap[r.shop]) {
-      shopMap[r.shop] = {shop:r.shop, icon:r.icon, entries:[], dishes:[], votes:0};
+      // 优先用 SHOPS 里的最新图标，SHOPS 没有则用 recData 里的
+      const freshIcon = SHOPS[r.shop]?.icon || r.icon || '🍽';
+      shopMap[r.shop] = {shop:r.shop, icon:freshIcon, entries:[], dishes:[], votes:0};
     }
     shopMap[r.shop].entries.push({user:r.user||'匿名', stars:r.stars||0, reason:r.reason||'', tags:r.tags||[]});
     // 菜品去重合并
@@ -1015,6 +1132,19 @@ function renderRecList() {
   document.getElementById('rec-list').innerHTML = items.length
     ? items.map(s => {
     const safeShop = s.shop.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    const safeId = s.shop.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'_');
+    const hasRatedThis = _hasRatedShop(s.shop);
+    const myRating = _getMyRating(s.shop);
+    const comments = (commentsData[s.shop] || []);
+    const commentRows = comments.map(c => `
+      <div class="comment-item">
+        <div class="comment-avatar">${(c.user||'?')[0]}</div>
+        <div class="comment-body">
+          <div class="comment-user">${c.user||'匿名'}</div>
+          <div class="comment-text">${c.text||''}</div>
+          <div class="comment-time">${c.time||''}</div>
+        </div>
+      </div>`).join('');
     const dishRows = (s.dishes||[]).map((d,i) => `
       <div class="rec-dish-row">
         <div class="d-icon">${d.e||icons[i%icons.length]}</div>
@@ -1056,6 +1186,19 @@ function renderRecList() {
           <div class="rec-dishes-title">👥 推荐人</div>
           <div class="rec-persons-list">${recommenders}</div>
           ${dishRows?`<div class="rec-dishes-title" style="margin-top:10px">🍽 推荐菜品</div><div class="rec-dish-list">${dishRows}</div>`:''}
+          <div class="rec-action-row">
+            <button class="rec-rate-btn${hasRatedThis?' rated':''}" onclick="event.stopPropagation();openRecRate('${safeShop}')">
+              ${hasRatedThis ? `⭐ 我的评分 ${myRating}分` : '⭐ 我要评分'}
+            </button>
+          </div>
+          <div class="comments-section">
+            <div class="comments-title">💬 评论区 ${comments.length?`(${comments.length})`:''}</div>
+            <div id="comments-${safeId}">${commentRows||'<div style="font-size:11px;color:var(--muted);text-align:center;padding:8px 0">还没有评论，来说两句吧！</div>'}</div>
+            <div class="comment-input-row">
+              <input type="text" placeholder="写点评论…" maxlength="60" id="cinput-${safeId}" onkeydown="if(event.key==='Enter')submitComment('${safeShop}','cinput-${safeId}')">
+              <button class="comment-send-btn" onclick="submitComment('${safeShop}','cinput-${safeId}')">发送</button>
+            </div>
+          </div>
           <button class="rec-order-btn" onclick="jumpTaobao('${safeShop}','')">🛒 去淘宝闪购点餐</button>
         </div>
       </div>`;
@@ -1075,7 +1218,13 @@ let rankShowAll = false;
 const MEDALS = ['🥇','🥈','🥉'];
 
 function renderRankList() {
-  const sorted = [...rankData].sort((a,b) => b.score - a.score);
+  const sorted = [...rankData].sort((a,b) => {
+    // 综合排序：评分 × 0.7 + 点赞数 × 0.3（归一化）
+    const maxLikes = Math.max(...rankData.map(r => r.likes||0), 1);
+    const aScore = a.score * 0.7 + ((a.likes||0) / maxLikes) * 5 * 0.3;
+    const bScore = b.score * 0.7 + ((b.likes||0) / maxLikes) * 5 * 0.3;
+    return bScore - aScore;
+  });
   const list = document.getElementById('rank-list');
   if (!list) return;
   list.innerHTML = sorted.map((r,i) => {
@@ -1084,15 +1233,16 @@ function renderRankList() {
     const cls = i===0?'gold':i===1?'silver':i===2?'bronze':'';
     const liked = votedShops.has(r.name);
     const safeRankName = r.name.replace(/'/g, "\\'");
+    const shopIcon = SHOPS[r.name]?.icon || '🍽';
     return `<div class="rank-item" style="${hidden?'display:none':''}">
       <div class="rank-num ${cls}">${medal}</div>
-      <div class="rank-info"><h4>${r.name}</h4><div class="rank-dish">★ ${r.dish||''}</div><div class="rank-meta">${r.meta||''}</div></div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-        <div class="rank-score"><div class="big">${r.score.toFixed(1)}</div><div class="count">${r.count}次</div></div>
-        <button class="rank-like-btn${liked?' liked':''}" onclick="likeRankItem('${safeRankName}',this)">
-          👍 ${r.likes||0}
-        </button>
+      <div style="font-size:22px;flex-shrink:0">${shopIcon}</div>
+      <div class="rank-info"><h4>${r.name}</h4><div class="rank-dish">${r.dish||''}</div>
+        <div class="rank-meta">⭐${r.score.toFixed(1)} · ${r.count}人评分 · 👍${r.likes||0}赞</div>
       </div>
+      <button class="rank-like-btn${liked?' liked':''}" onclick="likeRankItem('${safeRankName}',this)">
+        👍 ${r.likes||0}
+      </button>
     </div>`;
   }).join('');
   const btn = document.getElementById('rank-toggle');
@@ -1134,9 +1284,11 @@ function _autoIcon(shopName, dishes) {
   return '🍽';
 }
 
-// 从淘宝分享文本提取干净的店铺名（去掉末尾 https 等残留）
+// 从淘宝分享文本提取干净的店铺名
 function _extractShopName(raw) {
-  return (raw||'').trim().replace(/\s*(https?:\/\/.*)?$/, '').trim();
+  if (!raw) return '';
+  // 去掉 https:// 及之后所有内容，再去掉两端空格和标点
+  return raw.replace(/\s*https?:\/\/.*/i, '').replace(/[：:\s]+$/, '').trim();
 }
 
 let _quickRateShop = '';
@@ -1400,8 +1552,9 @@ function parsePasteInput(text) {
   }
   let delivery='', shopName='', jumpUrl='';
   const dm = text.match(/(\d+分钟)送达/); if (dm) delivery = dm[1];
-  const sm = text.match(/\d+分钟送达(.+?)[：:]/);
-  if (sm) shopName = _extractShopName(sm[1]);
+  // 匹配「X分钟送达」到第一个 https 或冒号或换行之间的内容作为店铺名
+  const sm = text.match(/\d+分钟送达([^：:\n\r]+?)(?=\s*https?:\/\/|[：:]|$)/);
+  if (sm) shopName = sm[1].trim();
   else { const fb = text.match(/^([^:：\n\r]{2,30})[：:]/); if (fb) shopName = fb[1].trim(); }
   // 优先提取 https:// 短链接（微信可直接打开）
   const httpsMatch = text.match(/https?:\/\/[^\s\n\r）)，。]+/);
@@ -1491,6 +1644,8 @@ function submitRateForm() {
   _fbSaveRank();
   recData.unshift({shop, icon: autoIcon, user:currentUsername||'我', stars:currentStar, reason:reason||'推荐这家！', votes:0, tags, dishes});
   _fbSaveRec();
+  // 填写推荐后标记该店铺已评分，不能再通过「同事推荐评分」重复评
+  _markRatedShop(shop, currentStar);
 
   // 显示提交成功卡片（在 clearRateForm 之前记录数据）
   const submittedShop = shop;
@@ -1536,6 +1691,391 @@ function clearRateForm() {
   document.getElementById('rate-dish-list').innerHTML=`<div class="dish-add-row"><input type="text" class="dish-name-input" placeholder="菜品名称"><input type="text" class="price-input" placeholder="¥价格"><button class="remove-btn" onclick="removeRateDish(this)">×</button></div>`;
 }
 
+// ══════════════════════════════════════════
+// 评论系统
+// ══════════════════════════════════════════
+const commentsData = {}; // {shopName: [{user,text,time}]}
+
+function _fbSaveComments() {
+  if (!window._fbSet) return;
+  window._fbSet('comments', Object.keys(commentsData).length ? commentsData : null);
+}
+
+// 监听评论
+function _watchComments() {
+  if (!window._fbOnValue) return;
+  window._fbOnValue('comments', snap => {
+    const val = snap.val() || {};
+    Object.keys(commentsData).forEach(k => delete commentsData[k]);
+    Object.assign(commentsData, val);
+    renderRecList();
+  });
+}
+
+function submitComment(shopName, inputId) {
+  if (!currentUsername) return showToast('请先登录 😊');
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return showToast('请输入评论内容');
+  if (!commentsData[shopName]) commentsData[shopName] = [];
+  const now = new Date();
+  const timeStr = `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  commentsData[shopName].push({user: currentUsername, text, time: timeStr});
+  _fbSaveComments();
+  input.value = '';
+  showToast('💬 评论发布成功！');
+  renderRecList();
+}
+
+// ══════════════════════════════════════════
+// 同事推荐评分（每人每店一次）
+// ══════════════════════════════════════════
+function _hasRatedShop(shopName) {
+  if (!currentUsername) return false;
+  try {
+    const key = 'moho_recrated_' + currentUsername;
+    const rated = JSON.parse(localStorage.getItem(key)||'{}');
+    return !!rated[shopName];
+  } catch(e) { return false; }
+}
+function _getMyRating(shopName) {
+  if (!currentUsername) return 0;
+  try {
+    const key = 'moho_recrated_' + currentUsername;
+    const rated = JSON.parse(localStorage.getItem(key)||'{}');
+    return rated[shopName] || 0;
+  } catch(e) { return 0; }
+}
+function _markRatedShop(shopName, star) {
+  if (!currentUsername) return;
+  try {
+    const key = 'moho_recrated_' + currentUsername;
+    const rated = JSON.parse(localStorage.getItem(key)||'{}');
+    rated[shopName] = star;
+    localStorage.setItem(key, JSON.stringify(rated));
+  } catch(e) {}
+}
+
+let _recRateShop = '';
+function openRecRate(shopName) {
+  if (!currentUsername) return showToast('请先登录 😊');
+  if (_hasRatedShop(shopName)) return showToast(`你已经给「${shopName}」评过分了 ✅`);
+  _recRateShop = shopName;
+  const s = SHOPS[shopName];
+  document.getElementById('qr-icon').textContent = s?.icon || '🍽';
+  document.getElementById('qr-name').textContent = shopName;
+  document.querySelectorAll('.qr-star').forEach(el => el.classList.remove('lit'));
+  document.getElementById('qr-submit-btn').disabled = true;
+  document.getElementById('quick-rate-overlay').classList.add('show');
+  // 复用快速评分弹窗，但提交走新逻辑
+  document.getElementById('qr-submit-btn').onclick = submitRecRate;
+}
+function submitRecRate() {
+  const star = [...document.querySelectorAll('.qr-star')].filter(e=>e.classList.contains('lit')).length;
+  if (!star || !_recRateShop) return;
+  const shop = _recRateShop;
+  _markRatedShop(shop, star);
+  document.getElementById('quick-rate-overlay').classList.remove('show');
+
+  // 加权计入榜单（所有评分都计入）
+  const rd = rankData.find(r => r.name === shop);
+  if (rd) {
+    rd.score = Math.round(((rd.score * rd.count + star) / (rd.count + 1)) * 10) / 10;
+    rd.count += 1;
+    rd.meta = `${rd.count}人评分`;
+  } else {
+    rankData.push({name:shop, dish:(SHOPS[shop]?.dishes||[]).slice(0,2).map(d=>d.n).join(' · ')||'推荐菜品', meta:'1人评分', score:star, count:1, likes:0});
+  }
+  _fbSaveRank();
+
+  // 只有 >3 星才加入推荐人列表
+  if (star > 3) {
+    recData.unshift({shop, icon:SHOPS[shop]?.icon||'🍽', user:currentUsername, stars:star, reason:'评分推荐 ⭐', votes:0, tags:[], dishes:SHOPS[shop]?.dishes||[]});
+    _fbSaveRec();
+    showToast(`⭐ 已给「${shop}」评 ${star} 分，已加入推荐人！`);
+  } else {
+    showToast(`⭐ 已给「${shop}」评 ${star} 分（不足4星不加入推荐）`);
+  }
+  _recRateShop = '';
+}
+
+// ══════════════════════════════════════════
+// 管理员系统
+// ══════════════════════════════════════════
+const ADMIN_ID = 'MOHO';
+const ADMIN_PWD = 'mohozst001';
+let isAdmin = false;
+let adminTab = 'shops';
+let _adminTapCount = 0, _adminTapTimer = null;
+const userActivity = {}; // {username: {lastSeen, loginCount, recCount}}
+
+// 记录用户活动到 Firebase（每天首次登录 +1，重复打开不再累加）
+function _recordUserActivity() {
+  if (!currentUsername || !window._fbSet || !window._fbOnValue) return;
+  const now = new Date();
+  const today = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const timeStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const safeKey = currentUsername.replace(/[.#$/\[\]]/g, '_');
+  // 检查今日是否已登录过
+  const loginFlag = 'moho_login_' + safeKey + '_' + today;
+  const alreadyLoggedToday = localStorage.getItem(loginFlag);
+  let unsub = null, done = false;
+  unsub = window._fbOnValue('users/' + safeKey, snap => {
+    if (done) return; done = true;
+    const cur = snap.val() || {};
+    window._fbSet('users/' + safeKey, {
+      name: currentUsername,
+      lastSeen: timeStr,
+      loginCount: alreadyLoggedToday ? (cur.loginCount||0) : (cur.loginCount||0) + 1,
+      recCount: recData.filter(r => r.user === currentUsername && (r.stars||r.reason)).length,
+      commentCount: Object.values(commentsData).flat().filter(c => c.user === currentUsername).length
+    });
+    if (!alreadyLoggedToday) localStorage.setItem(loginFlag, '1');
+    setTimeout(() => { if (typeof unsub === 'function') unsub(); }, 0);
+  });
+}
+
+function _watchUsers() {
+  if (!window._fbOnValue) return;
+  window._fbOnValue('users', snap => {
+    const val = snap.val() || {};
+    Object.keys(userActivity).forEach(k => delete userActivity[k]);
+    Object.assign(userActivity, val);
+    if (isAdmin && adminTab === 'users') renderAdminBody();
+  });
+}
+
+function _adminTap() {
+  _adminTapCount++;
+  clearTimeout(_adminTapTimer);
+  _adminTapTimer = setTimeout(() => { _adminTapCount = 0; }, 800);
+  if (_adminTapCount >= 5) { _adminTapCount = 0; openAdminLogin(); }
+}
+
+function openAdminLogin() {
+  const id = prompt('管理员账号：');
+  if (!id) return;
+  const pwd = prompt('管理员密码：');
+  if (id === ADMIN_ID && pwd === ADMIN_PWD) {
+    isAdmin = true;
+    document.getElementById('admin-screen').classList.add('show');
+    switchAdminTab('shops');
+  } else {
+    showToast('账号或密码错误 ❌');
+  }
+}
+function closeAdmin() {
+  document.getElementById('admin-screen').classList.remove('show');
+  isAdmin = false;
+}
+function switchAdminTab(tab) {
+  adminTab = tab;
+  ['shops','users'].forEach(t => {
+    const el = document.getElementById('atab-'+t);
+    if (el) el.classList.toggle('active', t===tab);
+  });
+  renderAdminBody();
+}
+
+function renderAdminBody() {
+  const body = document.getElementById('admin-body');
+  if (!body) return;
+
+  if (adminTab === 'shops') {
+    body.innerHTML = Object.keys(SHOPS).length
+      ? Object.entries(SHOPS).map(([name, s]) => {
+        const safe = name.replace(/'/g,"\\'");
+        const safeId = name.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'_');
+        const rd = rankData.find(r => r.name===name);
+        const curScore = rd ? rd.score : 0;
+        const stars = [1,2,3,4,5].map(n=>`<span class="admin-star${curScore>=n?' lit':''}" onclick="adminSetStarByName('${safe}',${n})" style="font-size:22px;cursor:pointer">${curScore>=n?'⭐':'☆'}</span>`).join('');
+        const allTags=['😋 味道好','⚡ 送得快','💰 超值','🍱 份量大','📦 包装好','🔁 会回购'];
+        const curTags = new Set(s.tags||[]);
+        const tagBtns = allTags.map(t=>`<div class="sec-tag-btn${curTags.has(t)?' sel':''}" onclick="this.classList.toggle('sel')" style="font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;display:inline-block;margin:3px">${t}</div>`).join('');
+        const dishRows = (s.dishes||[]).map(d=>`
+          <div style="display:flex;gap:5px;align-items:center;margin-bottom:5px">
+            <input type="text" value="${(d.n||'').replace(/"/g,'&quot;')}" class="admin-edit-input dish-n" style="flex:1;margin-top:0">
+            <input type="text" value="${(d.p||'').replace(/"/g,'&quot;')}" class="admin-edit-input price" style="flex:0 0 62px;margin-top:0">
+            <button onclick="this.parentElement.remove()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;width:28px;height:32px;cursor:pointer">×</button>
+          </div>`).join('');
+
+        // 推荐人列表
+        const shopRecs = recData.filter(r => r.shop===name && (r.stars||r.reason));
+        const recRows = shopRecs.length
+          ? shopRecs.map((r,i)=>`
+            <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px">
+              <div style="flex:1;background:var(--bg);border-radius:8px;padding:7px 10px">
+                <div style="font-size:11px;font-weight:700;color:var(--accent3)">${r.user||'匿名'} <span style="color:var(--accent2)">${'⭐'.repeat(Math.min(5,r.stars||0))}</span></div>
+                <div style="font-size:12px;color:var(--text);margin-top:2px">${r.reason||''}</div>
+                ${(r.tags||[]).length?`<div style="font-size:10px;color:var(--muted);margin-top:3px">${r.tags.join(' ')}</div>`:''}
+              </div>
+              <button class="admin-del-btn" onclick="adminDeleteRecByShopIdx('${safe}',${i})">删</button>
+            </div>`).join('')
+          : '<div style="font-size:11px;color:var(--muted);padding:6px 0">暂无推荐人</div>';
+
+        // 评论列表
+        const shopComments = (commentsData[name]||[]);
+        const commentRows = shopComments.map((c,i)=>`
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px">
+            <div style="flex:1;background:var(--bg);border-radius:8px;padding:6px 10px">
+              <div style="font-size:11px;font-weight:700;color:var(--accent3)">${c.user||'匿名'} <span style="color:var(--muted);font-weight:400">${c.time||''}</span></div>
+              <div style="font-size:12px;color:var(--text);margin-top:2px">${c.text||''}</div>
+            </div>
+            <button class="admin-del-btn" onclick="adminDeleteCommentInShop('${safe}',${i})">删</button>
+          </div>`).join('');
+
+        return `<div class="admin-card" style="margin-bottom:14px">
+          <div class="admin-card-header">
+            <div class="admin-card-name">${s.icon||'🍽'} ${name}</div>
+            <button class="admin-del-btn" onclick="adminDeleteShop('${safe}')">删除店铺</button>
+          </div>
+
+          <div style="font-size:10px;color:var(--accent2);font-weight:600;margin:8px 0 3px">店铺名称</div>
+          <input class="admin-edit-input" value="${name.replace(/"/g,'&quot;')}" id="aname-${safeId}">
+          <div style="font-size:10px;color:var(--accent2);font-weight:600;margin:6px 0 3px">跳转链接</div>
+          <input class="admin-edit-input" value="${(s.url||'').replace(/"/g,'&quot;')}" placeholder="https://…" id="aurl-${safeId}">
+          <div style="font-size:10px;color:var(--accent2);font-weight:600;margin:6px 0 3px">推荐理由</div>
+          <input class="admin-edit-input" value="${(s.reason||'').replace(/"/g,'&quot;')}" id="areason-${safeId}">
+          <div style="font-size:10px;color:var(--accent2);font-weight:600;margin:6px 0 3px">推荐菜品</div>
+          <div id="adishes-${safeId}">${dishRows}</div>
+          <button onclick="adminAddDish('${safeId}')" style="background:none;border:1px dashed var(--border);color:var(--muted);border-radius:8px;padding:5px;width:100%;font-size:11px;font-family:inherit;cursor:pointer;margin-bottom:6px">＋ 添加菜品</button>
+          <div style="font-size:10px;color:var(--accent2);font-weight:600;margin:6px 0 4px">综合评分</div>
+          <div id="admin-stars-${safeId}">${stars}</div>
+          <div style="font-size:10px;color:var(--accent2);font-weight:600;margin:6px 0 4px">标签</div>
+          <div id="atags-${safeId}">${tagBtns}</div>
+          <button class="admin-save-btn" style="width:100%;margin-top:10px" onclick="adminSaveShopFull('${safe}','${safeId}')">✓ 保存所有修改</button>
+
+          <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px">
+            <div style="font-size:10px;color:var(--accent2);font-weight:600;margin-bottom:8px">👥 推荐人（${shopRecs.length}人）</div>
+            ${recRows}
+          </div>
+
+          ${shopComments.length ? `
+          <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
+            <div style="font-size:10px;color:var(--accent2);font-weight:600;margin-bottom:8px">💬 评论（${shopComments.length}条）</div>
+            ${commentRows}
+          </div>` : ''}
+        </div>`;
+      }).join('')
+      : '<div style="text-align:center;padding:32px;color:var(--muted)">暂无店铺数据</div>';
+
+  } else if (adminTab === 'users') {
+    const users = Object.values(userActivity);
+    if (!users.length) { body.innerHTML = '<div style="text-align:center;padding:32px;color:var(--muted)">暂无用户数据</div>'; return; }
+    const sorted = users.sort((a,b) => (b.loginCount||0)-(a.loginCount||0));
+    body.innerHTML = `
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">共 ${sorted.length} 位用户</div>
+      ${sorted.map(u => {
+        const name = u.name||'未知';
+        return `<div class="admin-user-card">
+          <div class="admin-user-name">👤 ${name}</div>
+          <div class="admin-user-stat">
+            🕐 最后登录：${u.lastSeen||'未知'}<br>
+            🔑 登录天数：${u.loginCount||0} 天<br>
+            ✍️ 推荐记录：${u.recCount||0} 条<br>
+            💬 评论记录：${u.commentCount||0} 条
+          </div>
+        </div>`;
+      }).join('')}`;
+  }
+}
+
+// 管理员保存操作
+function adminAddDish(safeId) {
+  const c = document.getElementById('adishes-' + safeId);
+  if (!c) return;
+  const row = document.createElement('div');
+  row.className = 'shop-edit-dish-row';
+  row.style.cssText = 'display:flex;gap:5px;align-items:center;margin-bottom:5px';
+  row.innerHTML = `<input type="text" placeholder="菜品名" class="admin-edit-input dish-n" style="flex:1;margin-top:0"><input type="text" placeholder="¥价格" class="admin-edit-input price" style="flex:0 0 62px;margin-top:0"><button onclick="this.parentElement.remove()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;width:28px;height:32px;cursor:pointer">×</button>`;
+  c.appendChild(row);
+}
+function adminSetStarByName(shopName, n) {
+  // 更新 rankData
+  const rd = rankData.find(r => r.name === shopName);
+  if (rd) { rd.score = n; }
+  else { rankData.push({name:shopName, dish:'推荐菜品', meta:'管理员修改', score:n, count:1, likes:0}); }
+  _fbSaveRank();
+  // 更新星星显示
+  const safeId = shopName.replace(/[^a-zA-Z0-9\u4e00-\u9fa5]/g,'_');
+  const starsEl = document.getElementById('admin-stars-' + safeId);
+  if (starsEl) starsEl.querySelectorAll('.admin-star').forEach((s,i)=>{
+    s.classList.toggle('lit', i<n);
+    s.textContent = i<n ? '⭐' : '☆';
+  });
+  showToast(`⭐ 已将「${shopName}」评分改为 ${n} 分`);
+}
+function adminSaveShopFull(oldName, safeId) {
+  if (!SHOPS[oldName]) return;
+  const nameInput = document.getElementById('aname-' + safeId);
+  const urlInput = document.getElementById('aurl-' + safeId);
+  const reasonInput = document.getElementById('areason-' + safeId);
+  const dishesEl = document.getElementById('adishes-' + safeId);
+  const tagsEl = document.getElementById('atags-' + safeId);
+  const newName = nameInput?.value.trim() || oldName;
+  const newUrl = urlInput?.value.trim() || '';
+  const newReason = reasonInput?.value.trim() || '';
+  const dishes = [];
+  dishesEl?.querySelectorAll('.shop-edit-dish-row').forEach(r => {
+    const n = r.querySelector('.dish-n')?.value.trim();
+    const p = r.querySelector('.price')?.value.trim();
+    if (n) dishes.push({e: _autoIcon(n,[{n}]), n, p:p||'', desc:'', hot:dishes.length===0});
+  });
+  const tags = [...(tagsEl?.querySelectorAll('.sel')||[])].map(t=>t.textContent.trim());
+  const updated = {...SHOPS[oldName], url:newUrl, reason:newReason, tags,
+    dishes: dishes.length ? dishes : SHOPS[oldName].dishes||[]};
+  if (newName !== oldName) {
+    SHOPS[newName] = updated;
+    delete SHOPS[oldName];
+    recData.forEach(r => { if (r.shop===oldName) r.shop=newName; });
+    const rd = rankData.find(r=>r.name===oldName);
+    if (rd) rd.name = newName;
+    if (commentsData[oldName]) { commentsData[newName]=commentsData[oldName]; delete commentsData[oldName]; }
+    _fbSaveRec(); _fbSaveRank(); _fbSaveComments();
+  } else {
+    SHOPS[oldName] = updated;
+  }
+  _fbSaveShops();
+  renderAdminBody();
+  showToast('✅ 已保存「'+(newName||oldName)+'」');
+}
+function adminDeleteCommentInShop(shopName, idx) {
+  if (!commentsData[shopName]) return;
+  commentsData[shopName].splice(idx, 1);
+  if (!commentsData[shopName].length) delete commentsData[shopName];
+  _fbSaveComments();
+  renderAdminBody();
+  showToast('🗑 已删除评论');
+}
+function adminDeleteRecByShopIdx(shopName, idx) {
+  // 找到该店铺的第 idx 条有效推荐记录并删除
+  const shopRecs = recData.filter(r => r.shop===shopName && (r.stars||r.reason));
+  const target = shopRecs[idx];
+  if (!target) return;
+  const realIdx = recData.indexOf(target);
+  if (realIdx !== -1) recData.splice(realIdx, 1);
+  _fbSaveRec();
+  renderAdminBody();
+  showToast('🗑 已删除该推荐记录');
+}
+function adminDeleteShop(name) {
+  if (!confirm(`确定删除店铺「${name}」及其所有数据？`)) return;
+  delete SHOPS[name];
+  for (let i = recData.length-1; i>=0; i--) { if (recData[i].shop===name) recData.splice(i,1); }
+  const ri = rankData.findIndex(r=>r.name===name);
+  if (ri!==-1) rankData.splice(ri,1);
+  delete commentsData[name];
+  _fbSaveShops(); _fbSaveRec(); _fbSaveRank(); _fbSaveComments();
+  renderAdminBody(); showToast('🗑 已删除「'+name+'」');
+}
+function adminDeleteComment(shop, idx) {
+  if (!commentsData[shop]) return;
+  commentsData[shop].splice(idx, 1);
+  if (!commentsData[shop].length) delete commentsData[shop];
+  _fbSaveComments(); renderAdminBody(); showToast('🗑 已删除该评论');
+}
+
 // 初始渲染榜单
 renderRankList();
 
@@ -1543,13 +2083,19 @@ renderRankList();
 // 管理推荐 — 只显示当前用户自己提交的店铺
 // ══════════════════════════════════════════
 function _getMyShops() {
-  // 找出当前用户在 recData 里提交过的店铺名
+  if (!currentUsername) return [];
+  // 从 recData 里找我推荐过的店铺
   const myShopNames = new Set(
     recData
       .filter(r => r.user === currentUsername || r.user === (currentUsername + '（点赞）'))
       .map(r => r.shop)
   );
-  // 返回 SHOPS 里属于我的店铺（按提交顺序，存在于 SHOPS 里的）
+  // 也包含我评过分的店铺（localStorage）
+  try {
+    const key = 'moho_recrated_' + currentUsername;
+    const rated = JSON.parse(localStorage.getItem(key)||'{}');
+    Object.keys(rated).forEach(shop => { if (SHOPS[shop]) myShopNames.add(shop); });
+  } catch(e) {}
   return Object.keys(SHOPS).filter(name => myShopNames.has(name));
 }
 
@@ -1597,7 +2143,7 @@ function _renderSettingsShops() {
           <div class="shop-edit-label">推荐菜品</div>
           <div class="shop-edit-dishes" id="sec-dishes-${idx}">${dishes}</div>
           <button class="add-dish-small" onclick="addSettingsDish(${idx})">＋ 添加菜品</button>
-          <div class="shop-edit-label" style="margin-top:12px">⭐ 综合评分</div>
+          <div class="shop-edit-label" style="margin-top:12px">⭐ 综合评分 ${curScore>0?`<span style="color:var(--accent2);font-weight:400">（当前 ${curScore.toFixed(1)} 分，保存后更新）</span>`:''}</div>
           <div class="sec-stars" id="sec-stars-${idx}" data-score="${curScore}">${stars}</div>
           <div class="shop-edit-label" style="margin-top:10px">🏷 标签</div>
           <div class="sec-tags" id="sec-tags-${idx}">${tagBtns}</div>
@@ -1697,7 +2243,31 @@ function saveAllSettings() {
         recData.forEach(r => { if(r.shop === oldName) r.shop = newName; });
         _fbSaveRec();
       }
-      if(score>0){ const rd=rankData.find(r=>r.name===oldName); if(rd){rd.name=newName;rd.score=score;if(tags.length) rd.meta=`${rd.count}人评分 · ${tags.join(' ')}`;}else{rankData.push({name:newName,dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品',meta:`1人评分 · ${tags.join(' ')||'同事推荐'}`,score,count:1,likes:0});} _fbSaveRank(); }
+      // 保存评分：score > 0 才更新，让用户能通过管理推荐修改评分
+      if(score > 0) {
+        const rd = rankData.find(r=>r.name===oldName);
+        if(rd) {
+          rd.name = newName;
+          rd.score = score;
+          rd.meta = `${rd.count}人评分${tags.length?' · '+tags.join(' '):''}`;
+        } else {
+          rankData.push({name:newName, dish:dishes.length?dishes.map(d=>d.n).join(' · '):'推荐菜品', meta:`1人评分${tags.length?' · '+tags.join(' '):''}`, score, count:1, likes:0});
+        }
+        _fbSaveRank();
+        // 同步更新本人的评分记录（管理推荐里修改了评分）
+        if(currentUsername) {
+          const key = 'moho_recrated_' + currentUsername;
+          try {
+            const rated = JSON.parse(localStorage.getItem(key)||'{}');
+            if(newName !== oldName && rated[oldName]) {
+              rated[newName] = score; delete rated[oldName];
+            } else {
+              rated[newName] = score;
+            }
+            localStorage.setItem(key, JSON.stringify(rated));
+          } catch(e) {}
+        }
+      }
     }
   });
   Object.keys(SHOPS).forEach(k=>delete SHOPS[k]); Object.assign(SHOPS,newShops);
