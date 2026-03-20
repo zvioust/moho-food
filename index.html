@@ -1611,49 +1611,29 @@ function _doVote(shopName) {
   if (alreadyVoted) {
     votedShops.delete(shopName);
     _saveVotedShops();
-    // 取消点赞：从榜单 likes 减1，从 Firebase 点赞路径减1
-    const rd = rankData.find(r => r.name === shopName);
-    if (rd) {
-      rd.likes = Math.max(0, (rd.likes||0) - 1);
-      _fbSaveRank();
-    }
-    // 更新 recData 的 votes
+    // 取消点赞：从 Firebase 点赞路径减1
+    _fbRemoveVote(shopName);
+    // 更新本地 recData 的 votes（实际由 Firebase 监听器更新）
     recData.forEach(r => {
       if (r.shop === shopName) r.votes = Math.max(0, (r.votes||0) - 1);
     });
     _fbSaveRec();
-    _fbRemoveVote(shopName);
     // 立即更新 UI
-    renderRankList();
     renderRecList();
     showToast(`👍 已取消对「${shopName}」的点赞`);
   } else {
     votedShops.add(shopName);
     _saveVotedShops();
-    // 写入 Firebase 点赞数
+    // 写入 Firebase 点赞数（likes 由 Firebase 监听器同步到 rankData）
     _fbAddVote(shopName);
-    // 点赞加权计入榜单评分（每票 = 4星）
-    const rd = rankData.find(r => r.name === shopName);
-    if (rd) {
-      rd.score = Math.round(((rd.score * rd.count + 4) / (rd.count + 1)) * 10) / 10;
-      rd.count += 1;
-      rd.meta = `${rd.count}人评分 · ${rd.meta.replace(/^\d+人评分 · /,'')}`;
-    } else {
-      const s = SHOPS[shopName];
-      rankData.push({
-        name: shopName,
-        dish: (s?.dishes||[]).slice(0,2).map(d=>d.n).join(' · ') || '推荐菜品',
-        meta: '1人评分 · 同事投票',
-        score: 4,
-        count: 1,
-        likes: 1
-      });
-    }
-    _fbSaveRank();
+    // 更新本地 recData 的 votes
+    recData.forEach(r => {
+      if (r.shop === shopName) r.votes = (r.votes||0) + 1;
+    });
+    _fbSaveRec();
     // 立即更新 UI
-    renderRankList();
     renderRecList();
-    showToast(`👍 已投票给「${shopName}」，计入今日榜单！`);
+    showToast(`👍 已投票给「${shopName}」！`);
   }
 }
 
