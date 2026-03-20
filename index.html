@@ -1582,7 +1582,6 @@ function _fbRemoveVote(shopName) {
 // 监听总点赞数
 function _watchTodayVotes() {
   if (!window._fbOnValue) return;
-  // 立即获取一次点赞数据
   window._fbOnValue('likes', snap => {
     const val = snap.val() || {};
     let changed = false;
@@ -1592,14 +1591,12 @@ function _watchTodayVotes() {
       const newLikes = val[safeKey] || 0;
       if ((rd.likes||0) !== newLikes) { rd.likes = newLikes; changed = true; }
     });
-    // 更新 recData 的点赞数
-    const updated = new Set();
+    // 更新 recData 所有条目的点赞数（不再使用 updated set）
     recData.forEach(r => {
-      if (!r.shop || updated.has(r.shop)) return;
+      if (!r.shop) return;
       const safeKey = r.shop.replace(/[.#$\/\[\]]/g, '_');
       const v = val[safeKey] || 0;
       if ((r.votes||0) !== v) { r.votes = v; changed = true; }
-      updated.add(r.shop);
     });
     if (changed) { renderRankList(); renderRecList(); }
   });
