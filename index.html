@@ -1217,11 +1217,19 @@ function renderRecList() {
     // 菜品去重合并
     const ex = new Set(shopMap[r.shop].dishes.map(d=>d.n));
     (r.dishes||[]).forEach(d => { if (d && d.n && !ex.has(d.n)) { shopMap[r.shop].dishes.push(d); ex.add(d.n); } });
-    // votes 累加（不在初始化时设初始值，避免双倍）
-    shopMap[r.shop].votes += (r.votes||0);
+    // votes 只取第一条记录的值（Firebase 监听器会把所有记录设为相同值）
+    if (!shopMap[r.shop].votes) shopMap[r.shop].votes = (r.votes||0);
   });
   const icons = ['🍜','🥘','🍱','🥗','🍛','🥩','🍣','🥟'];
   let items = Object.values(shopMap);
+  // 按榜单综合得分排序（评分 + 点赞数）
+  items.sort((a, b) => {
+    const rdA = rankData.find(r => r.name === a.shop);
+    const rdB = rankData.find(r => r.name === b.shop);
+    const scoreA = (rdA?.score || 0) + (rdA?.likes || 0);
+    const scoreB = (rdB?.score || 0) + (rdB?.likes || 0);
+    return scoreB - scoreA;
+  });
   // 分类筛选（支持多分类，检查是否包含）
   if (recFilterCategory && recFilterCategory !== '全部') {
     items = items.filter(s => {
@@ -1321,10 +1329,9 @@ const MEDALS = ['🥇','🥈','🥉'];
 
 function renderRankList() {
   const sorted = [...rankData].sort((a,b) => {
-    // 综合排序：评分 × 0.7 + 点赞数 × 0.3（归一化）
-    const maxLikes = Math.max(...rankData.map(r => r.likes||0), 1);
-    const aScore = a.score * 0.7 + ((a.likes||0) / maxLikes) * 5 * 0.3;
-    const bScore = b.score * 0.7 + ((b.likes||0) / maxLikes) * 5 * 0.3;
+    // 综合排序：评分 + 点赞数（各占50%权重）
+    const aScore = (a.score || 0) + (a.likes || 0);
+    const bScore = (b.score || 0) + (b.likes || 0);
     return bScore - aScore;
   });
   const list = document.getElementById('rank-list');
@@ -1608,30 +1615,15 @@ function _doVote(shopName) {
   if (alreadyVoted) {
     votedShops.delete(shopName);
     _saveVotedShops();
-    // 取消点赞：从 Firebase 点赞路径减1
     _fbRemoveVote(shopName);
-    // 更新本地 recData 的 votes（实际由 Firebase 监听器更新）
-    recData.forEach(r => {
-      if (r.shop === shopName) r.votes = Math.max(0, (r.votes||0) - 1);
-    });
-    _fbSaveRec();
-    // 立即更新 UI
-    renderRecList();
     showToast(`👍 已取消对「${shopName}」的点赞`);
   } else {
     votedShops.add(shopName);
     _saveVotedShops();
-    // 写入 Firebase 点赞数（likes 由 Firebase 监听器同步到 rankData）
     _fbAddVote(shopName);
-    // 更新本地 recData 的 votes
-    recData.forEach(r => {
-      if (r.shop === shopName) r.votes = (r.votes||0) + 1;
-    });
-    _fbSaveRec();
-    // 立即更新 UI
-    renderRecList();
     showToast(`👍 已投票给「${shopName}」！`);
   }
+  renderRecList();
 }
 
 // 同事推荐的👍
