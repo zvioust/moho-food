@@ -1271,10 +1271,7 @@ function renderRecList() {
         <div class="rec-item-top" onclick="toggleRecDishes(this)">
           <div class="rec-avatar">${avatarContent}</div>
           <div class="rec-info">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <div class="sh" style="font-size:14px;font-weight:700;color:var(--text)">${s.shop}</div>
-              <span class="rec-category-badge" style="font-size:10px;padding:2px 8px;border-radius:10px;background:${CATEGORY_COLORS[firstCat]||CATEGORY_COLORS['其他']};color:${CATEGORY_TEXT_COLORS[firstCat]||CATEGORY_TEXT_COLORS['其他']};font-weight:600;">${s.category||'其他'}</span>
-            </div>
+            <div class="sh" style="font-size:14px;font-weight:700;color:var(--text)">${s.shop}</div>
             <div class="rec-persons-preview">${s.entries.map(e=>e.user).join('、')} 推荐
               ${s.entries.length>1?`<span class="rec-count">${s.entries.length}人</span>`:''}
             </div>
