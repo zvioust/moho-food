@@ -8,7 +8,7 @@
 <!-- 微信/社交分享卡片 -->
 <meta property="og:title" content="MOHO觅食指南 🍱">
 <meta property="og:description" content="今天吃什么？同事推荐，一键点餐，轻松解决觅食难题！">
-<meta property="og:image" content="https://raw.githubusercontent.com/zvioust/moho-food/main/cover.png">
+<meta property="og:image" content="https://gitee.com/jiuger2/cover/raw/master/cover.png">
 <meta property="og:url" content="https://github.com/zvioust/moho-food">
 <meta property="og:type" content="website">
 <meta name="description" content="今天吃什么？同事推荐，一键点餐，轻松解决觅食难题！">
@@ -305,6 +305,7 @@ body.day-mode .recommend-box p{color:#fff !important;}
 .sec-tag-btn{font-size:11px;padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;transition:all .2s;}
 .sec-tag-btn:hover{border-color:var(--accent3);color:var(--accent3);}
 .sec-tag-btn.sel{border-color:var(--accent3);background:rgba(6,214,160,.08);color:var(--accent3);}
+.sec-cat-btn{cursor:pointer;transition:all .2s;}
 
 .qr-star{font-size:32px;cursor:pointer;opacity:.3;filter:grayscale(1);transition:all .15s;}
 .qr-star.lit{opacity:1;filter:none;transform:scale(1.1);}
@@ -1581,14 +1582,17 @@ function _fbRemoveVote(shopName) {
 // 监听总点赞数
 function _watchTodayVotes() {
   if (!window._fbOnValue) return;
+  // 立即获取一次点赞数据
   window._fbOnValue('likes', snap => {
     const val = snap.val() || {};
     let changed = false;
+    // 更新 rankData 的点赞数
     rankData.forEach(rd => {
       const safeKey = rd.name.replace(/[.#$\/\[\]]/g, '_');
       const newLikes = val[safeKey] || 0;
       if ((rd.likes||0) !== newLikes) { rd.likes = newLikes; changed = true; }
     });
+    // 更新 recData 的点赞数
     const updated = new Set();
     recData.forEach(r => {
       if (!r.shop || updated.has(r.shop)) return;
@@ -1619,6 +1623,9 @@ function _doVote(shopName) {
     });
     _fbSaveRec();
     _fbRemoveVote(shopName);
+    // 立即更新 UI
+    renderRankList();
+    renderRecList();
     showToast(`👍 已取消对「${shopName}」的点赞`);
   } else {
     votedShops.add(shopName);
@@ -1643,6 +1650,9 @@ function _doVote(shopName) {
       });
     }
     _fbSaveRank();
+    // 立即更新 UI
+    renderRankList();
+    renderRecList();
     showToast(`👍 已投票给「${shopName}」，计入今日榜单！`);
   }
 }
@@ -1937,6 +1947,9 @@ function submitRecRate() {
     rankData.push({name:shop, dish:(SHOPS[shop]?.dishes||[]).slice(0,2).map(d=>d.n).join(' · ')||'推荐菜品', meta:'1人评分', score:star, count:1, likes:0});
   }
   _fbSaveRank();
+  // 立即更新榜单和推荐列表 UI
+  renderRankList();
+  renderRecList();
 
   // 只有 >3 星才加入推荐人列表
   if (star > 3) {
@@ -2066,6 +2079,13 @@ function renderAdminBody() {
         const allTags=['😋 味道好','⚡ 送得快','💰 超值','🍱 份量大','📦 包装好','🔁 会回购'];
         const curTags = new Set(s.tags||[]);
         const tagBtns = allTags.map(t=>`<div class="sec-tag-btn${curTags.has(t)?' sel':''}" onclick="this.classList.toggle('sel')" style="font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;display:inline-block;margin:3px">${t}</div>`).join('');
+        const curCatStr = s.category || '其他';
+        const curCats = new Set(curCatStr.split(','));
+        const catBtns = SHOP_CATEGORIES.map(cat => {
+          const isSelected = curCats.has(cat);
+          const catIcons = {'正餐':'🍚','团餐':'🌙','下午茶':'🍰','减肥餐':'🥗','其他':'🍽'};
+          return `<div class="sec-cat-btn" onclick="adminToggleCat(this,'${safeId}','${cat}')" style="padding:5px 10px;border-radius:8px;border:1px solid ${isSelected?'var(--accent)':CATEGORY_COLORS[cat]};background:${isSelected?CATEGORY_COLORS[cat]:'transparent'};color:${isSelected?CATEGORY_TEXT_COLORS[cat]:'var(--muted)'};cursor:pointer;font-size:11px;transition:all .2s;">${catIcons[cat]} ${cat}</div>`;
+        }).join('');
         const dishRows = (s.dishes||[]).map(d=>`
           <div style="display:flex;gap:5px;align-items:center;margin-bottom:5px">
             <input type="text" value="${(d.n||'').replace(/"/g,'&quot;')}" class="admin-edit-input dish-n" style="flex:1;margin-top:0">
@@ -2117,6 +2137,8 @@ function renderAdminBody() {
           <div id="admin-stars-${safeId}">${stars}</div>
           <div style="font-size:10px;color:var(--accent2);font-weight:600;margin:6px 0 4px">标签</div>
           <div id="atags-${safeId}">${tagBtns}</div>
+          <div style="font-size:10px;color:var(--accent2);font-weight:600;margin:10px 0 4px">分类</div>
+          <div id="acats-${safeId}" data-cats="${curCatStr}" style="display:flex;gap:5px;flex-wrap:wrap;">${catBtns}</div>
           <button class="admin-save-btn" style="width:100%;margin-top:10px" onclick="adminSaveShopFull('${safe}','${safeId}')">✓ 保存所有修改</button>
 
           <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px">
@@ -2186,6 +2208,7 @@ function adminSaveShopFull(oldName, safeId) {
   const reasonInput = document.getElementById('areason-' + safeId);
   const dishesEl = document.getElementById('adishes-' + safeId);
   const tagsEl = document.getElementById('atags-' + safeId);
+  const catsEl = document.getElementById('acats-' + safeId);
   const newName = nameInput?.value.trim() || oldName;
   const newUrl = urlInput?.value.trim() || '';
   const newReason = reasonInput?.value.trim() || '';
@@ -2196,7 +2219,8 @@ function adminSaveShopFull(oldName, safeId) {
     if (n) dishes.push({e: _autoIcon(n,[{n}]), n, p:p||'', desc:'', hot:dishes.length===0});
   });
   const tags = [...(tagsEl?.querySelectorAll('.sel')||[])].map(t=>t.textContent.trim());
-  const updated = {...SHOPS[oldName], url:newUrl, reason:newReason, tags,
+  const selectedCats = catsEl ? (catsEl.dataset.cats || '其他') : SHOPS[oldName].category || '其他';
+  const updated = {...SHOPS[oldName], url:newUrl, reason:newReason, tags, category:selectedCats,
     dishes: dishes.length ? dishes : SHOPS[oldName].dishes||[]};
   if (newName !== oldName) {
     SHOPS[newName] = updated;
@@ -2247,6 +2271,25 @@ function adminDeleteComment(shop, idx) {
   commentsData[shop].splice(idx, 1);
   if (!commentsData[shop].length) delete commentsData[shop];
   _fbSaveComments(); renderAdminBody(); showToast('🗑 已删除该评论');
+}
+function adminToggleCat(el, safeId, cat) {
+  const container = document.getElementById('acats-' + safeId);
+  if (!container) return;
+  const cats = container.dataset.cats ? new Set(container.dataset.cats.split(',')) : new Set(['其他']);
+  if (cats.has(cat)) {
+    cats.delete(cat);
+  } else {
+    cats.add(cat);
+  }
+  if (cats.size === 0) cats.add('其他');
+  container.dataset.cats = [...cats].join(',');
+  container.querySelectorAll('.sec-cat-btn').forEach(btn => {
+    const btnCat = btn.textContent.replace(/^[^\s]+\s/, '').trim();
+    const isSelected = cats.has(btnCat);
+    btn.style.borderColor = isSelected ? 'var(--accent)' : CATEGORY_COLORS[btnCat];
+    btn.style.background = isSelected ? CATEGORY_COLORS[btnCat] : 'transparent';
+    btn.style.color = isSelected ? CATEGORY_TEXT_COLORS[btnCat] : 'var(--muted)';
+  });
 }
 
 // 初始渲染榜单
